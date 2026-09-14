@@ -1,0 +1,247 @@
+## JSON
+JavaScript Object Notation is structured format of the data that uses **Key and Value** (HashMap/ Dictionary) type of data.
+
+```JSON
+{
+	Name:"Sanay",
+	Age:21,
+}
+```
+
+JSON allows a different form of data too that is not allowed in MySQL. That means that JSON does not required a particular Schema for the Data to be stored.
+
+Two extra types of data that could be stored are:
+
+1. **Array Object**
+	Array Object could be stored in the JSON format.
+	```JSON
+	{
+		Name:"Sanay",
+		Skills:["Python","MySQL"],
+	}
+	```
+
+2. **Embedded Object**
+	Embedded Objects are objects that could be defined inside the JSON file.
+	```JSON
+	{
+		Name:"Sanay",
+		Address:{
+			city:"Jaipur",
+			pincode:302021,
+			address:"710 Vidhyadhar ka Rasta"
+		}
+	}
+	```
+
+**_NOTE_**: JSON is the only format that could be changed by the user but when JSON is transferred to the MongoDB server, it converts into the BSON format(Binary JSON) which is given a Unique ID by MongoDB.
+
+## How to run the Queries?
+For the Queries in the MongoDB, we need to do some steps for it.
+
+1. **Create Database** : `Use("Poornima")`
+
+2. **Create Collection** (Creating Table):  `db.createCollection("Student")`
+
+3. **Insert Documents** (Insert Row): 
+	```Json
+	db.Student.insertOne({
+		name:"Sanay",
+		age:20,
+	})
+	```
+
+
+### Example
+
+```Json
+use("E-Commerce")
+
+db.createCollection("Products")
+
+db.Products.insertOne({
+	Name:"Iphone 10 S",
+	ProductionYr:2024,
+	ProcessorDetails:{
+		Processor:"Gen6",
+		CPU:4,
+		Threads:16,
+	},
+	CameraSpec:{
+		Camera:"48px",
+		Sensor:"IR Grade",
+		MotionCapture:True,
+	},
+	Available:False,
+})
+```
+
+```Json
+db.products.insertMany([
+|     {
+|         Name: "Iphone 10 S",
+|         ProductionYr: 2024,
+|         ProcessorDetails: {
+|             Processor: "Gen6",
+|             CPU: 4,
+|             Threads: 16
+|         },
+|         CameraSpec: {
+|             Camera: "48px",
+|             Sensor: "IR Grade",
+|             MotionCapture: true
+|         },
+|         Available: false
+|     },
+|     {
+|         Name: "Iphone 11",
+|         ProductionYr: 2024,
+|         ProcessorDetails: {
+|             Processor: "Gen7",
+|             CPU: 6,
+|             Threads: 12
+|         },
+|         CameraSpec: {
+|             Camera: "50px",
+|             Sensor: "CMOS",
+|             MotionCapture: true
+|         },
+|         Available: true
+|     },
+|     {
+|         Name: "Iphone 12",
+|         ProductionYr: 2023,
+|         ProcessorDetails: {
+|             Processor: "Gen6",
+|             CPU: 4,
+|             Threads: 8
+|         },
+|         CameraSpec: {
+|             Camera: "48px",
+|             Sensor: "IR Grade",
+|             MotionCapture: false
+|         },
+|         Available: true
+|     },
+|     {
+|         Name: "Iphone 13",
+|         ProductionYr: 2023,
+|         ProcessorDetails: {
+|             Processor: "Gen8",
+|             CPU: 8,
+|             Threads: 16
+|         },
+|         CameraSpec: {
+|             Camera: "64px",
+|             Sensor: "CMOS",
+|             MotionCapture: true
+|         },
+|         Available: true
+|     },
+|     {
+|         Name: "Iphone 14",
+|         ProductionYr: 2022,
+|         ProcessorDetails: {
+|             Processor: "Gen8",
+|             CPU: 6,
+|             Threads: 12
+|         },
+|         CameraSpec: {
+|             Camera: "48px",
+|             Sensor: "IR Grade",
+|             MotionCapture: true
+|         },
+|         Available: false
+|     },
+|     {
+|         Name: "Iphone 15",
+|         ProductionYr: 2022,
+|         ProcessorDetails: {
+|             Processor: "Gen9",
+|             CPU: 8,
+|             Threads: 16
+|         },
+|         CameraSpec: {
+|             Camera: "50px",
+|             Sensor: "CMOS",
+|             MotionCapture: true
+|         },
+|         Available: true
+|     },
+|     {
+|         Name: "Iphone 16",
+|         ProductionYr: 2021,
+|         ProcessorDetails: {
+|             Processor: "Gen7",
+|             CPU: 4,
+|             Threads: 8
+|         },
+|         CameraSpec: {
+|             Camera: "48px",
+|             Sensor: "IR Grade",
+|             MotionCapture: false
+|         },
+|         Available: true
+|     },
+|     {
+|         Name: "Iphone 17",
+|         ProductionYr: 2021,
+|         ProcessorDetails: {
+|             Processor: "Gen9",
+|             CPU: 6,
+|             Threads: 12
+|         },
+|         CameraSpec: {
+|             Camera: "64px",
+|             Sensor: "CMOS",
+|             MotionCapture: true
+|         },
+|         Available: false
+|     },
+|     {
+|         Name: "Iphone 18",
+|         ProductionYr: 2020,
+|         ProcessorDetails: {
+|             Processor: "Gen8",
+|             CPU: 4,
+|             Threads: 8
+|         },
+|         CameraSpec: {
+|             Camera: "48px",
+|             Sensor: "IR Grade",
+|             MotionCapture: true
+|         },
+|         Available: true
+|     },
+|     {
+|         Name: "Iphone 19",
+|         ProductionYr: 2020,
+|         ProcessorDetails: {
+|             Processor: "Gen10",
+|             CPU: 8,
+|             Threads: 16
+|         },
+|         CameraSpec: {
+|             Camera: "50px",
+|             Sensor: "CMOS",
+|             MotionCapture: true
+|         },
+|         Available: true
+|     }
+| ])
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('6aa7b55235cdcbb2a84cebd6'),
+    '1': ObjectId('6aa7b55235cdcbb2a84cebd7'),
+    '2': ObjectId('6aa7b55235cdcbb2a84cebd8'),
+    '3': ObjectId('6aa7b55235cdcbb2a84cebd9'),
+    '4': ObjectId('6aa7b55235cdcbb2a84cebda'),
+    '5': ObjectId('6aa7b55235cdcbb2a84cebdb'),
+    '6': ObjectId('6aa7b55235cdcbb2a84cebdc'),
+    '7': ObjectId('6aa7b55235cdcbb2a84cebdd'),
+    '8': ObjectId('6aa7b55235cdcbb2a84cebde'),
+    '9': ObjectId('6aa7b55235cdcbb2a84cebdf')
+  }
+}
+```
