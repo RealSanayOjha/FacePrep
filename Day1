@@ -77,158 +77,205 @@ db.Products.insertOne({
 ```
 
 ```Json
-db.products.insertMany([
-|     {
-|         Name: "Iphone 10 S",
-|         ProductionYr: 2024,
-|         ProcessorDetails: {
-|             Processor: "Gen6",
-|             CPU: 4,
-|             Threads: 16
-|         },
-|         CameraSpec: {
-|             Camera: "48px",
-|             Sensor: "IR Grade",
-|             MotionCapture: true
-|         },
-|         Available: false
-|     },
-|     {
-|         Name: "Iphone 11",
-|         ProductionYr: 2024,
-|         ProcessorDetails: {
-|             Processor: "Gen7",
-|             CPU: 6,
-|             Threads: 12
-|         },
-|         CameraSpec: {
-|             Camera: "50px",
-|             Sensor: "CMOS",
-|             MotionCapture: true
-|         },
-|         Available: true
-|     },
-|     {
-|         Name: "Iphone 12",
-|         ProductionYr: 2023,
-|         ProcessorDetails: {
-|             Processor: "Gen6",
-|             CPU: 4,
-|             Threads: 8
-|         },
-|         CameraSpec: {
-|             Camera: "48px",
-|             Sensor: "IR Grade",
-|             MotionCapture: false
-|         },
-|         Available: true
-|     },
-|     {
-|         Name: "Iphone 13",
-|         ProductionYr: 2023,
-|         ProcessorDetails: {
-|             Processor: "Gen8",
-|             CPU: 8,
-|             Threads: 16
-|         },
-|         CameraSpec: {
-|             Camera: "64px",
-|             Sensor: "CMOS",
-|             MotionCapture: true
-|         },
-|         Available: true
-|     },
-|     {
-|         Name: "Iphone 14",
-|         ProductionYr: 2022,
-|         ProcessorDetails: {
-|             Processor: "Gen8",
-|             CPU: 6,
-|             Threads: 12
-|         },
-|         CameraSpec: {
-|             Camera: "48px",
-|             Sensor: "IR Grade",
-|             MotionCapture: true
-|         },
-|         Available: false
-|     },
-|     {
-|         Name: "Iphone 15",
-|         ProductionYr: 2022,
-|         ProcessorDetails: {
-|             Processor: "Gen9",
-|             CPU: 8,
-|             Threads: 16
-|         },
-|         CameraSpec: {
-|             Camera: "50px",
-|             Sensor: "CMOS",
-|             MotionCapture: true
-|         },
-|         Available: true
-|     },
-|     {
-|         Name: "Iphone 16",
-|         ProductionYr: 2021,
-|         ProcessorDetails: {
-|             Processor: "Gen7",
-|             CPU: 4,
-|             Threads: 8
-|         },
-|         CameraSpec: {
-|             Camera: "48px",
-|             Sensor: "IR Grade",
-|             MotionCapture: false
-|         },
-|         Available: true
-|     },
-|     {
-|         Name: "Iphone 17",
-|         ProductionYr: 2021,
-|         ProcessorDetails: {
-|             Processor: "Gen9",
-|             CPU: 6,
-|             Threads: 12
-|         },
-|         CameraSpec: {
-|             Camera: "64px",
-|             Sensor: "CMOS",
-|             MotionCapture: true
-|         },
-|         Available: false
-|     },
-|     {
-|         Name: "Iphone 18",
-|         ProductionYr: 2020,
-|         ProcessorDetails: {
-|             Processor: "Gen8",
-|             CPU: 4,
-|             Threads: 8
-|         },
-|         CameraSpec: {
-|             Camera: "48px",
-|             Sensor: "IR Grade",
-|             MotionCapture: true
-|         },
-|         Available: true
-|     },
-|     {
-|         Name: "Iphone 19",
-|         ProductionYr: 2020,
-|         ProcessorDetails: {
-|             Processor: "Gen10",
-|             CPU: 8,
-|             Threads: 16
-|         },
-|         CameraSpec: {
-|             Camera: "50px",
-|             Sensor: "CMOS",
-|             MotionCapture: true
-|         },
-|         Available: true
-|     }
-| ])
+use ("Poornima")
+db.createCollection("Student")
+db.Student.insertMany([
+    {
+        studentId: 101,
+        name: "Sanay Ojha",
+        department: "CSE",
+        graduationYear: 2027,
+        cgpa: 8.5,
+        address: {
+            city: "Jaipur",
+            state: "Rajasthan",
+            pincode: 302017
+        },
+        skills: ["Java", "MongoDB", "Python"]
+    },
+    {
+        studentId: 102,
+        name: "Rahul Sharma",
+        department: "CSE",
+        graduationYear: 2027,
+        cgpa: 8.2,
+        address: {
+            city: "Delhi",
+            state: "Delhi",
+            pincode: 110001
+        },
+        skills: ["C++", "DSA", "SQL"]
+    },
+    {
+        studentId: 103,
+        name: "Aman Gupta",
+        department: "IT",
+        graduationYear: 2026,
+        cgpa: 7.9,
+        address: {
+            city: "Kota",
+            state: "Rajasthan",
+            pincode: 324001
+        },
+        skills: ["JavaScript", "React", "Node.js"]
+    },
+    {
+        studentId: 104,
+        name: "Priya Singh",
+        department: "ECE",
+        graduationYear: 2027,
+        cgpa: 8.7,
+        address: {
+            city: "Ajmer",
+            state: "Rajasthan",
+            pincode: 305001
+        },
+        skills: ["C", "Arduino", "Embedded Systems"]
+    },
+    {
+        studentId: 105,
+        name: "Rohan Verma",
+        department: "CSE",
+        graduationYear: 2026,
+        cgpa: 9.1,
+        address: {
+            city: "Jaipur",
+            state: "Rajasthan",
+            pincode: 302019
+        },
+        skills: ["Python", "Django", "SQL"]
+    },
+    {
+        studentId: 106,
+        name: "Neha Mehta",
+        department: "IT",
+        graduationYear: 2027,
+        cgpa: 8.4,
+        address: {
+            city: "Udaipur",
+            state: "Rajasthan",
+            pincode: 313001
+        },
+        skills: ["HTML", "CSS", "JavaScript"]
+    },
+    {
+        studentId: 107,
+        name: "Vikas Yadav",
+        department: "ME",
+        graduationYear: 2026,
+        cgpa: 7.8,
+        address: {
+            city: "Alwar",
+            state: "Rajasthan",
+            pincode: 301001
+        },
+        skills: ["AutoCAD", "SolidWorks", "Python"]
+    },
+    {
+        studentId: 108,
+        name: "Anjali Jain",
+        department: "CSE",
+        graduationYear: 2027,
+        cgpa: 8.9,
+        address: {
+            city: "Bikaner",
+            state: "Rajasthan",
+            pincode: 334001
+        },
+        skills: ["Java", "Spring Boot", "MongoDB"]
+    },
+    {
+        studentId: 109,
+        name: "Karan Joshi",
+        department: "ECE",
+        graduationYear: 2026,
+        cgpa: 8.1,
+        address: {
+            city: "Jodhpur",
+            state: "Rajasthan",
+            pincode: 342001
+        },
+        skills: ["C", "MATLAB", "VLSI"]
+    },
+    {
+        studentId: 110,
+        name: "Sneha Kapoor",
+        department: "IT",
+        graduationYear: 2027,
+        cgpa: 8.6,
+        address: {
+            city: "Jaipur",
+            state: "Rajasthan",
+            pincode: 302012
+        },
+        skills: ["Python", "Machine Learning", "SQL"]
+    },
+    {
+        studentId: 111,
+        name: "Arjun Singh",
+        department: "CSE",
+        graduationYear: 2026,
+        cgpa: 7.6,
+        address: {
+            city: "Bharatpur",
+            state: "Rajasthan",
+            pincode: 321001
+        },
+        skills: ["C++", "DSA", "Git"]
+    },
+    {
+        studentId: 112,
+        name: "Pooja Agarwal",
+        department: "ECE",
+        graduationYear: 2027,
+        cgpa: 8.3,
+        address: {
+            city: "Kishangarh",
+            state: "Rajasthan",
+            pincode: 305801
+        },
+        skills: ["Arduino", "Python", "IoT"]
+    },
+    {
+        studentId: 113,
+        name: "Mohit Bansal",
+        department: "ME",
+        graduationYear: 2026,
+        cgpa: 7.5,
+        address: {
+            city: "Sikar",
+            state: "Rajasthan",
+            pincode: 332001
+        },
+        skills: ["AutoCAD", "CAD", "Manufacturing"]
+    },
+    {
+        studentId: 114,
+        name: "Simran Kaur",
+        department: "CSE",
+        graduationYear: 2027,
+        cgpa: 9.0,
+        address: {
+            city: "Chandigarh",
+            state: "Chandigarh",
+            pincode: 160001
+        },
+        skills: ["Java", "Python", "Data Structures"]
+    },
+    {
+        studentId: 115,
+        name: "Nikhil Sharma",
+        department: "IT",
+        graduationYear: 2026,
+        cgpa: 8.0,
+        address: {
+            city: "Kota",
+            state: "Rajasthan",
+            pincode: 324005
+        },
+        skills: ["React", "Node.js", "MongoDB"]
+    }
+])
 {
   acknowledged: true,
   insertedIds: {
