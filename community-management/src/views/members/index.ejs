@@ -1,0 +1,56 @@
+<%- include('../partials/header') %>
+
+<div class="actions">
+  <div><h1 style="margin-bottom:0;">Members</h1></div>
+  <div class="spacer"></div>
+  <a class="btn" href="/members/new">+ Add member</a>
+</div>
+
+<div class="card">
+  <form method="GET" action="/members" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+    <div class="field" style="margin-bottom:0; min-width:260px; flex:1;">
+      <label for="community">Filter by community</label>
+      <select id="community" name="community">
+        <option value="">All communities</option>
+        <% allCommunities.forEach((c) => { %>
+          <option value="<%= c._id %>" <%= String(selectedCommunity) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+        <% }) %>
+      </select>
+    </div>
+    <button class="btn" type="submit">Apply</button>
+  </form>
+</div>
+
+<% if (members.length === 0) { %>
+  <div class="empty">No members found. <a href="/members/new">Add the first one</a>.</div>
+<% } else { %>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Email</th><th>Role</th><th>Community</th><th>Joined</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% members.forEach((member) => { %>
+        <tr>
+          <td><strong><%= member.name %></strong></td>
+          <td><%= member.email || '-' %></td>
+          <td><span class="tag <%= member.role %>"><%= member.role %></span></td>
+          <td>
+            <% if (member.community) { %>
+              <a href="/communities/<%= member.community._id %>"><%= member.community.name %></a>
+            <% } else { %>-<% } %>
+          </td>
+          <td class="nowrap"><%= formatDate(member.joinedAt) %></td>
+          <td class="nowrap">
+            <a class="btn small secondary" href="/members/<%= member._id %>/edit">Edit</a>
+            <form class="inline-form" method="POST" action="/members/<%= member._id %>/delete"
+                  onsubmit="return confirm('Delete <%= member.name %>?');">
+              <button class="btn small danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,45 @@
+<%- include('../partials/header') %>
+
+<h1>Edit community</h1>
+<p class="subtitle">Update the details and save.</p>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="banner error"><%= error %></div>
+<% } %>
+
+<div class="card">
+  <form method="POST" action="/communities/<%= community._id %>/update">
+    <div class="field">
+      <label for="name">Name *</label>
+      <input type="text" id="name" name="name" value="<%= community.name %>" required />
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" name="description"><%= community.description || '' %></textarea>
+    </div>
+
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category" name="category">
+        <% categories.forEach((c) => { %>
+          <option value="<%= c %>" <%= community.category === c ? 'selected' : '' %>><%= c %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="location">City / Location</label>
+      <input type="text" id="location" name="location" value="<%= community.location || '' %>" />
+    </div>
+
+    <div class="form-actions">
+      <button class="btn" type="submit">Save changes</button>
+      <a class="btn secondary" href="/communities/<%= community._id %>">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<p class="muted">Created <%= formatDate(community.createdAt) %><% if (community.updatedAt) { %> &middot; last updated <%= formatDate(community.updatedAt) %><% } %></p>
+
+<%- include('../partials/footer') %>

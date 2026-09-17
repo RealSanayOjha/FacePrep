@@ -1,0 +1,54 @@
+<%- include('../partials/header') %>
+
+<h1>Add member</h1>
+<p class="subtitle">Every member belongs to a community.</p>
+
+<% const v = (typeof values !== 'undefined' && values) ? values : {}; %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="banner error"><%= error %></div>
+<% } %>
+
+<% if (allCommunities.length === 0) { %>
+  <div class="empty">Create a community first. <a href="/communities/new">New community</a></div>
+<% } else { %>
+  <div class="card">
+    <form method="POST" action="/members">
+      <div class="field">
+        <label for="name">Name *</label>
+        <input type="text" id="name" name="name" value="<%= v.name || '' %>" required />
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="<%= v.email || '' %>" placeholder="name@example.com" />
+      </div>
+
+      <div class="field">
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <% roles.forEach((r) => { %>
+            <option value="<%= r %>" <%= v.role === r || (!Object.keys(v).length && r === 'member') ? 'selected' : '' %>><%= r %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="communityId">Community *</label>
+        <select id="communityId" name="communityId" required>
+          <option value="">-- choose a community --</option>
+          <% allCommunities.forEach((c) => { %>
+            <option value="<%= c._id %>" <%= String(preselected) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn" type="submit">Add member</button>
+        <a class="btn secondary" href="/members">Cancel</a>
+      </div>
+    </form>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

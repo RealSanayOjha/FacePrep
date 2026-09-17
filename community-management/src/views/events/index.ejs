@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+
+<div class="actions">
+  <div><h1 style="margin-bottom:0;">Events</h1></div>
+  <div class="spacer"></div>
+  <a class="btn" href="/events/new">+ Create event</a>
+</div>
+
+<div class="card">
+  <form method="GET" action="/events" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+    <div class="field" style="margin-bottom:0; min-width:260px; flex:1;">
+      <label for="community">Filter by community</label>
+      <select id="community" name="community">
+        <option value="">All communities</option>
+        <% allCommunities.forEach((c) => { %>
+          <option value="<%= c._id %>" <%= String(selectedCommunity) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+        <% }) %>
+      </select>
+    </div>
+    <button class="btn" type="submit">Apply</button>
+  </form>
+</div>
+
+<% if (events.length === 0) { %>
+  <div class="empty">No events found. <a href="/events/new">Create the first one</a>.</div>
+<% } else { %>
+  <table>
+    <thead>
+      <tr><th>Event</th><th>Community</th><th>Date</th><th>Location</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% events.forEach((event) => { %>
+        <tr>
+          <td>
+            <strong><%= event.title %></strong>
+            <% if (event.description) { %><br /><span class="muted"><%= event.description %></span><% } %>
+          </td>
+          <td>
+            <% if (event.community) { %>
+              <a href="/communities/<%= event.community._id %>"><%= event.community.name %></a>
+            <% } else { %>-<% } %>
+          </td>
+          <td class="nowrap">
+            <%= formatDate(event.date) %>
+            <% if (event.date && new Date(event.date) >= today) { %>
+              <br /><span class="muted">upcoming</span>
+            <% } else if (event.date) { %>
+              <br /><span class="muted">past</span>
+            <% } %>
+          </td>
+          <td><%= event.location || '-' %></td>
+          <td class="nowrap">
+            <a class="btn small secondary" href="/events/<%= event._id %>/edit">Edit</a>
+            <form class="inline-form" method="POST" action="/events/<%= event._id %>/delete"
+                  onsubmit="return confirm('Delete <%= event.title %>?');">
+              <button class="btn small danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/footer') %>

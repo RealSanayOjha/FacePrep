@@ -1,0 +1,8 @@
+<%- include('partials/header') %>
+
+<h1>Something went wrong</h1>
+<p class="subtitle"><%= error && error.message ? error.message : 'Unexpected error' %></p>
+<p>Most of the time this means the app could not reach MongoDB. Check the connection string in your <code>.env</code> file.</p>
+<a class="btn" href="/">Back to dashboard</a>
+
+<%- include('partials/footer') %>

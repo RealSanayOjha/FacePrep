@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<h1>Dashboard</h1>
+<p class="subtitle">A basic Community Management system with full CRUD on three collections.</p>
+
+<div class="stats">
+  <div class="stat">
+    <div class="value"><%= counts.communities %></div>
+    <div class="label">Communities</div>
+  </div>
+  <div class="stat">
+    <div class="value"><%= counts.members %></div>
+    <div class="label">Members</div>
+  </div>
+  <div class="stat">
+    <div class="value"><%= counts.events %></div>
+    <div class="label">Events</div>
+  </div>
+</div>
+
+<h2>Quick actions</h2>
+<div class="card">
+  <div class="actions" style="margin-bottom: 0;">
+    <a class="btn" href="/communities/new">New community</a>
+    <a class="btn secondary" href="/members/new">Add member</a>
+    <a class="btn secondary" href="/events/new">Create event</a>
+  </div>
+</div>
+
+<h2>Upcoming events</h2>
+<% if (upcoming.length === 0) { %>
+  <div class="empty">No upcoming events yet. <a href="/events/new">Create one</a>.</div>
+<% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th>Event</th>
+        <th>Community</th>
+        <th>Date</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% upcoming.forEach((event) => { %>
+        <tr>
+          <td><strong><a href="/communities/<%= event.communityId %>"><%= event.title %></a></strong></td>
+          <td><%= event.community ? event.community.name : '-' %></td>
+          <td class="nowrap"><%= formatDate(event.date) %></td>
+          <td><%= event.location || '-' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('partials/footer') %>

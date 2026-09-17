@@ -1,0 +1,69 @@
+<%- include('../partials/header') %>
+
+<div class="actions">
+  <div>
+    <h1 style="margin-bottom:0;"><%= community.name %></h1>
+    <p class="subtitle" style="margin:4px 0 0;">
+      <span class="tag"><%= community.category %></span>
+      <% if (community.location) { %><span class="tag"><%= community.location %></span><% } %>
+    </p>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn secondary" href="/communities/<%= community._id %>/edit">Edit</a>
+  <form class="inline-form" method="POST" action="/communities/<%= community._id %>/delete"
+        onsubmit="return confirm('Delete this community? Its members and events will be deleted too.');">
+    <button class="btn danger" type="submit">Delete</button>
+  </form>
+</div>
+
+<div class="card">
+  <p><%= community.description || 'No description yet.' %></p>
+  <p class="muted">Created <%= formatDate(community.createdAt) %></p>
+</div>
+
+<h2>Members (<%= communityMembers.length %>)</h2>
+<% if (communityMembers.length === 0) { %>
+  <div class="empty">No members yet. <a href="/members/new?community=<%= community._id %>">Add one</a>.</div>
+<% } else { %>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% communityMembers.forEach((member) => { %>
+        <tr>
+          <td><strong><%= member.name %></strong></td>
+          <td><%= member.email || '-' %></td>
+          <td><span class="tag <%= member.role %>"><%= member.role %></span></td>
+          <td class="nowrap"><%= formatDate(member.joinedAt) %></td>
+          <td class="nowrap"><a class="btn small secondary" href="/members/<%= member._id %>/edit">Edit</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<h2>Events (<%= communityEvents.length %>)</h2>
+<% if (communityEvents.length === 0) { %>
+  <div class="empty">No events yet. <a href="/events/new?community=<%= community._id %>">Create one</a>.</div>
+<% } else { %>
+  <table>
+    <thead>
+      <tr><th>Event</th><th>Date</th><th>Location</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% communityEvents.forEach((event) => { %>
+        <tr>
+          <td><strong><%= event.title %></strong><br /><span class="muted"><%= event.description || '' %></span></td>
+          <td class="nowrap"><%= formatDate(event.date) %></td>
+          <td><%= event.location || '-' %></td>
+          <td class="nowrap"><a class="btn small secondary" href="/events/<%= event._id %>/edit">Edit</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<p style="margin-top:24px;"><a href="/communities">&larr; Back to all communities</a></p>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,38 @@
+<%- include('../partials/header') %>
+
+<div class="actions">
+  <div>
+    <h1 style="margin-bottom:0;">Communities</h1>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn" href="/communities/new">+ New community</a>
+</div>
+
+<% if (communities.length === 0) { %>
+  <div class="empty">No communities yet. <a href="/communities/new">Create the first one</a>.</div>
+<% } else { %>
+  <div class="grid">
+    <% communities.forEach((community) => { %>
+      <div class="card">
+        <h3><a href="/communities/<%= community._id %>"><%= community.name %></a></h3>
+        <p class="muted"><%= community.description || 'No description' %></p>
+        <p>
+          <span class="tag"><%= community.category %></span>
+          <% if (community.location) { %><span class="tag"><%= community.location %></span><% } %>
+        </p>
+        <p class="muted"><%= community.memberCount %> members &middot; <%= community.eventCount %> events</p>
+        <div class="form-actions" style="margin-top:14px;">
+          <a class="btn small secondary" href="/communities/<%= community._id %>/edit">Edit</a>
+          <a class="btn small secondary" href="/members/new?community=<%= community._id %>">Add member</a>
+          <a class="btn small secondary" href="/events/new?community=<%= community._id %>">Add event</a>
+          <form class="inline-form" method="POST" action="/communities/<%= community._id %>/delete"
+                onsubmit="return confirm('Delete <%= community.name %>? Its members and events will be deleted too.');">
+            <button class="btn small danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>
