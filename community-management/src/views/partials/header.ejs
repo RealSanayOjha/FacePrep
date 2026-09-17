@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= typeof title !== 'undefined' && title ? title : 'Community Management' %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Community&nbsp;Manager</a>
+    <nav>
+      <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Dashboard</a>
+      <a href="/communities" class="<%= currentPath.startsWith('/communities') ? 'active' : '' %>">Communities</a>
+      <a href="/members" class="<%= currentPath.startsWith('/members') ? 'active' : '' %>">Members</a>
+      <a href="/events" class="<%= currentPath.startsWith('/events') ? 'active' : '' %>">Events</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <% if (query && query.deleted) { %>
+      <div class="banner">Deleted successfully.</div>
+    <% } %>
+    <% if (query && query.updated) { %>
+      <div class="banner">Changes saved.</div>
+    <% } %>
+    <% if (query && query.created) { %>
+      <div class="banner">Created successfully.</div>
+    <% } %>

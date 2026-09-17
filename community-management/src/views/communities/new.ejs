@@ -1,0 +1,45 @@
+<%- include('../partials/header') %>
+
+<h1>New community</h1>
+<p class="subtitle">Fill in the form to create a community.</p>
+
+<% const v = (typeof values !== 'undefined' && values) ? values : {}; %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="banner error"><%= error %></div>
+<% } %>
+
+<div class="card">
+  <form method="POST" action="/communities">
+    <div class="field">
+      <label for="name">Name *</label>
+      <input type="text" id="name" name="name" value="<%= v.name || '' %>" placeholder="e.g. Poornima Coding Club" required />
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" placeholder="What is this community about?"><%= v.description || '' %></textarea>
+    </div>
+
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category" name="category">
+        <% categories.forEach((c) => { %>
+          <option value="<%= c %>" <%= v.category === c || (!Object.keys(v).length && c === 'Other') ? 'selected' : '' %>><%= c %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="location">City / Location</label>
+      <input type="text" id="location" name="location" value="<%= v.location || '' %>" placeholder="e.g. Jaipur" />
+    </div>
+
+    <div class="form-actions">
+      <button class="btn" type="submit">Create community</button>
+      <a class="btn secondary" href="/communities">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

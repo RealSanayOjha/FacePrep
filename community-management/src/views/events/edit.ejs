@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+
+<h1>Edit event</h1>
+<p class="subtitle">Change the details and save.</p>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="banner error"><%= error %></div>
+<% } %>
+
+<div class="card">
+  <form method="POST" action="/events/<%= event._id %>/update">
+    <div class="field">
+      <label for="title">Title *</label>
+      <input type="text" id="title" name="title" value="<%= event.title %>" required />
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" name="description"><%= event.description || '' %></textarea>
+    </div>
+
+    <div class="field">
+      <label for="date">Date</label>
+      <input type="date" id="date" name="date" value="<%= toDateInput(event.date) %>" />
+    </div>
+
+    <div class="field">
+      <label for="location">Location</label>
+      <input type="text" id="location" name="location" value="<%= event.location || '' %>" />
+    </div>
+
+    <div class="field">
+      <label for="communityId">Community *</label>
+      <select id="communityId" name="communityId" required>
+        <% allCommunities.forEach((c) => { %>
+          <option value="<%= c._id %>" <%= String(event.communityId) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn" type="submit">Save changes</button>
+      <a class="btn secondary" href="/events">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>
