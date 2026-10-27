@@ -1,0 +1,174 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1>Community Bulletin</h1>
+    <p class="subtitle">Cross-community announcements, pinned notices, and member reactions.</p>
+  </div>
+</div>
+
+<div class="pill-tabs">
+  <a class="pill-tab <%= !filters.pinned ? 'active' : '' %>"
+     href="/announcements?q=<%= encodeURIComponent(filters.q) %>&community=<%= encodeURIComponent(filters.community) %>">
+    All Announcements
+  </a>
+  <a class="pill-tab <%= filters.pinned ? 'active' : '' %>"
+     href="/announcements?pinned=1&q=<%= encodeURIComponent(filters.q) %>&community=<%= encodeURIComponent(filters.community) %>">
+    &#9733; Pinned Only
+  </a>
+</div>
+
+<div class="split-layout">
+  <!-- Main Feed Column -->
+  <div>
+    <div class="filter-bar">
+      <form method="GET" action="/announcements" class="filter-grid">
+        <% if (filters.pinned) { %>
+          <input type="hidden" name="pinned" value="1" />
+        <% } %>
+
+        <div class="field search-field">
+          <label for="q">Search bulletin</label>
+          <input type="text" id="q" name="q" value="<%= filters.q %>" placeholder="Headline, details, or author..." />
+        </div>
+
+        <div class="field">
+          <label for="community">Community</label>
+          <select id="community" name="community">
+            <option value="">All communities</option>
+            <% allCommunities.forEach((c) => { %>
+              <option value="<%= c._id %>" <%= String(filters.community) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="btn" type="submit">Filter</button>
+          <% if (filters.q || filters.community || filters.pinned) { %>
+            <a class="btn secondary" href="/announcements">Reset</a>
+          <% } %>
+        </div>
+      </form>
+    </div>
+
+    <% if (announcements.length === 0) { %>
+      <div class="empty">
+        <p>No announcements match your filters yet.</p>
+      </div>
+    <% } else { %>
+      <div class="feed-list">
+        <% announcements.forEach((post) => { %>
+          <div class="announcement-card <%= post.pinned ? 'pinned' : '' %>">
+            <div class="announcement-top">
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <% if (post.community) { %>
+                  <a class="tag category" href="/communities/<%= post.community._id %>"><%= post.community.name %></a>
+                <% } %>
+                <% if (post.pinned) { %>
+                  <span class="tag featured">Pinned</span>
+                <% } %>
+              </div>
+              <span class="muted"><%= formatDate(post.createdAt) %></span>
+            </div>
+
+            <h3><%= post.title %></h3>
+            <% if (post.body) { %>
+              <p><%= post.body %></p>
+            <% } %>
+
+            <div class="announcement-footer">
+              <span>Posted by <strong><%= post.authorName || 'Admin' %></strong></span>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <form class="inline-form" method="POST" action="/announcements/<%= post._id %>/like">
+                  <input type="hidden" name="returnTo" value="<%= currentUrl %>" />
+                  <button class="btn small secondary" type="submit" title="Increment likes via MongoDB $inc">&#9825; <%= post.likes || 0 %></button>
+                </form>
+                <form class="inline-form" method="POST" action="/announcements/<%= post._id %>/pin">
+                  <input type="hidden" name="returnTo" value="<%= currentUrl %>" />
+                  <button class="btn small secondary" type="submit"><%= post.pinned ? 'Unpin' : 'Pin' %></button>
+                </form>
+                <form class="inline-form" method="POST" action="/announcements/<%= post._id %>/delete"
+                      onsubmit="return confirm('Delete this announcement?');">
+                  <input type="hidden" name="returnTo" value="<%= currentUrl %>" />
+                  <button class="btn small danger" type="submit">Delete</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Sidebar Form: Publish New Announcement -->
+  <div>
+    <div class="card compact">
+      <div class="section-head" style="margin-bottom:12px;">
+        <h2 style="font-size:16px;">Post an Update</h2>
+      </div>
+
+      <% if (allCommunities.length === 0) { %>
+        <p class="muted">Create a community first before posting an announcement.</p>
+        <a class="btn small" href="/communities/new">+ New Community</a>
+      <% } else { %>
+        <form method="POST" action="/announcements">
+          <input type="hidden" name="returnTo" value="/announcements" />
+
+          <div class="field">
+            <label for="communityId">Community *</label>
+            <select id="communityId" name="communityId" required>
+              <option value="">-- Select community --</option>
+              <% allCommunities.forEach((c) => { %>
+                <option value="<%= c._id %>" <%= String(filters.community) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="title">Headline *</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Hackathon teams open!" required />
+          </div>
+
+          <div class="field">
+            <label for="authorName">Author Name</label>
+            <input type="text" id="authorName" name="authorName" placeholder="e.g. Sanay Ojha" />
+          </div>
+
+          <div class="field">
+            <label for="body">Message</label>
+            <textarea id="body" name="body" style="min-height:80px;" placeholder="Write your update..."></textarea>
+          </div>
+
+          <div class="field">
+            <label class="checkbox-label">
+              <input type="checkbox" name="pinned" />
+              <span>Pin to top of feed</span>
+            </label>
+          </div>
+
+          <button class="btn" type="submit" style="width:100%;">Publish Announcement</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<details class="mongo-hint">
+  <summary>
+    <span>MongoDB Operations on Bulletin Board</span>
+    <span class="muted">Click to inspect</span>
+  </summary>
+  <pre class="mongo-code">// Compound index `{ communityId: 1, pinned: -1, createdAt: -1 }` accelerates sorted feeds:
+db.collection('announcements').aggregate([
+  { $match: filter },
+  { $lookup: { from: 'communities', localField: 'communityId', foreignField: '_id', as: 'community' } },
+  { $unwind: { path: '$community', preserveNullAndEmptyArrays: true } },
+  { $sort: { pinned: -1, createdAt: -1 } }
+]);
+
+// Atomic upvote ($inc) & boolean pin toggle ($set):
+await db.collection('announcements').updateOne({ _id }, { $inc: { likes: 1 } });
+await db.collection('announcements').updateOne({ _id }, { $set: { pinned: !doc.pinned } });</pre>
+</details>
+
+<%- include('../partials/footer') %>

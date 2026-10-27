@@ -1,56 +1,242 @@
 <%- include('partials/header') %>
 
-<h1>Dashboard</h1>
-<p class="subtitle">A basic Community Management system with full CRUD on three collections.</p>
-
-<div class="stats">
-  <div class="stat">
-    <div class="value"><%= counts.communities %></div>
-    <div class="label">Communities</div>
+<div class="page-header">
+  <div>
+    <h1>Community Overview</h1>
+    <p class="subtitle">Manage campus &amp; local communities, member skills, event RSVPs, and live announcements.</p>
   </div>
-  <div class="stat">
-    <div class="value"><%= counts.members %></div>
-    <div class="label">Members</div>
-  </div>
-  <div class="stat">
-    <div class="value"><%= counts.events %></div>
-    <div class="label">Events</div>
+  <div class="header-actions">
+    <a class="btn secondary" href="/events/new">+ Create Event</a>
+    <a class="btn" href="/communities/new">+ New Community</a>
   </div>
 </div>
 
-<h2>Quick actions</h2>
-<div class="card">
-  <div class="actions" style="margin-bottom: 0;">
-    <a class="btn" href="/communities/new">New community</a>
-    <a class="btn secondary" href="/members/new">Add member</a>
-    <a class="btn secondary" href="/events/new">Create event</a>
+<!-- KPI Summary Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Communities</span>
+      <span class="stat-icon">&#127963;</span>
+    </div>
+    <div class="stat-value"><%= counts.communities %></div>
+    <div class="stat-meta"><a href="/communities">Browse directory &rarr;</a></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Members</span>
+      <span class="stat-icon">&#128101;</span>
+    </div>
+    <div class="stat-value"><%= counts.members %></div>
+    <div class="stat-meta"><a href="/members">Directory &amp; skills &rarr;</a></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Upcoming Events</span>
+      <span class="stat-icon">&#128197;</span>
+    </div>
+    <div class="stat-value"><%= counts.upcomingEvents %></div>
+    <div class="stat-meta"><%= counts.totalRsvps %> total RSVPs recorded</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Bulletin Updates</span>
+      <span class="stat-icon">&#128227;</span>
+    </div>
+    <div class="stat-value"><%= counts.announcements %></div>
+    <div class="stat-meta"><a href="/announcements">View announcements &rarr;</a></div>
   </div>
 </div>
 
-<h2>Upcoming events</h2>
-<% if (upcoming.length === 0) { %>
-  <div class="empty">No upcoming events yet. <a href="/events/new">Create one</a>.</div>
-<% } else { %>
-  <table>
-    <thead>
-      <tr>
-        <th>Event</th>
-        <th>Community</th>
-        <th>Date</th>
-        <th>Location</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% upcoming.forEach((event) => { %>
-        <tr>
-          <td><strong><a href="/communities/<%= event.communityId %>"><%= event.title %></a></strong></td>
-          <td><%= event.community ? event.community.name : '-' %></td>
-          <td class="nowrap"><%= formatDate(event.date) %></td>
-          <td><%= event.location || '-' %></td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
-<% } %>
+<div class="split-layout">
+  <!-- Main Column: Upcoming Events + Highlighted Communities -->
+  <div>
+    <div class="section-head">
+      <h2>Upcoming Events</h2>
+      <a class="section-link" href="/events?status=upcoming">See all events &rarr;</a>
+    </div>
+
+    <% if (upcoming.length === 0) { %>
+      <div class="empty" style="margin-bottom:28px;">
+        <p>No upcoming events scheduled right now.</p>
+        <a class="btn small" href="/events/new">Schedule an event</a>
+      </div>
+    <% } else { %>
+      <div class="event-list" style="margin-bottom:30px;">
+        <% upcoming.forEach((event) => {
+             const cap = event.capacity || 0;
+             const going = event.rsvpCount || 0;
+             const pct = cap > 0 ? Math.min(100, Math.round((going / cap) * 100)) : 0;
+        %>
+          <div class="event-item">
+            <div class="date-tile">
+              <span class="month"><%= formatMonthShort(event.date) %></span>
+              <span class="day"><%= formatDayNum(event.date) %></span>
+            </div>
+
+            <div class="event-body">
+              <h3><a href="/events/<%= event._id %>"><%= event.title %></a></h3>
+              <div class="event-meta">
+                <% if (event.community) { %>
+                  <a href="/communities/<%= event.community._id %>"><strong><%= event.community.name %></strong></a>
+                <% } %>
+                <span>&middot; <%= formatRelativeDate(event.date) %></span>
+                <% if (event.location) { %>
+                  <span>&middot; <%= event.location %></span>
+                <% } %>
+                <span class="tag <%= event.mode === 'Online' ? 'online' : event.mode === 'Hybrid' ? 'hybrid' : '' %>"><%= event.mode %></span>
+              </div>
+            </div>
+
+            <div class="event-aside">
+              <% if (cap > 0) { %>
+                <div class="capacity-wrap">
+                  <div class="capacity-label">
+                    <span><%= going %> / <%= cap %> spots</span>
+                    <span><%= pct %>%</span>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill <%= going >= cap ? 'full' : '' %>" style="width:<%= pct %>%;"></div>
+                  </div>
+                </div>
+              <% } else { %>
+                <span class="muted"><%= going %> going</span>
+              <% } %>
+              <a class="btn small soft" href="/events/<%= event._id %>">View &amp; RSVP</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <div class="section-head">
+      <h2>Highlighted Communities</h2>
+      <a class="section-link" href="/communities">Explore all &rarr;</a>
+    </div>
+
+    <% if (featuredCommunities.length === 0) { %>
+      <div class="empty">
+        <p>No communities yet.</p>
+        <a class="btn small" href="/communities/new">Create the first community</a>
+      </div>
+    <% } else { %>
+      <div class="cards-grid">
+        <% featuredCommunities.forEach((c) => { %>
+          <div class="community-card">
+            <div>
+              <div class="community-card-top">
+                <span class="tag category"><%= c.category %></span>
+                <% if (c.featured) { %><span class="tag featured">&#9733; Featured</span><% } %>
+              </div>
+              <h3><a href="/communities/<%= c._id %>"><%= c.name %></a></h3>
+              <p class="clamp-2"><%= c.description || 'No description provided yet.' %></p>
+              <% if (c.tags && c.tags.length) { %>
+                <div class="tag-row">
+                  <% c.tags.slice(0, 3).forEach((t) => { %>
+                    <span class="tag hash">#<%= t %></span>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+            <div class="community-card-footer">
+              <span><%= c.memberCount %> members &middot; <%= c.eventCount %> events &middot; <%= c.views %> views</span>
+              <a href="/communities/<%= c._id %>">Open &rarr;</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Sidebar Column: Bulletin Updates + Network Skills -->
+  <div>
+    <div class="section-head">
+      <h2>Latest Bulletin</h2>
+      <a class="section-link" href="/announcements">All posts &rarr;</a>
+    </div>
+
+    <% if (recentAnnouncements.length === 0) { %>
+      <div class="empty" style="margin-bottom:24px;">
+        <p>No announcements posted yet.</p>
+        <a class="btn small secondary" href="/announcements">Post update</a>
+      </div>
+    <% } else { %>
+      <div class="feed-list" style="margin-bottom:26px;">
+        <% recentAnnouncements.forEach((post) => { %>
+          <div class="announcement-card <%= post.pinned ? 'pinned' : '' %>">
+            <div class="announcement-top">
+              <% if (post.community) { %>
+                <a class="tag category" href="/communities/<%= post.community._id %>"><%= post.community.name %></a>
+              <% } else { %>
+                <span class="tag">General</span>
+              <% } %>
+              <% if (post.pinned) { %>
+                <span class="tag featured">Pinned</span>
+              <% } %>
+            </div>
+            <h3><%= post.title %></h3>
+            <% if (post.body) { %>
+              <p><%= post.body %></p>
+            <% } %>
+            <div class="announcement-footer">
+              <span>By <%= post.authorName || 'Admin' %> &middot; <%= formatRelativeDate(post.createdAt) %></span>
+              <form class="inline-form" method="POST" action="/announcements/<%= post._id %>/like">
+                <input type="hidden" name="returnTo" value="/" />
+                <button class="btn small secondary" type="submit">&#9825; <%= post.likes || 0 %></button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <div class="card compact">
+      <div class="section-head" style="margin-bottom:10px;">
+        <h2 style="font-size:15.5px;">Top Member Skills</h2>
+        <a class="section-link" href="/analytics">Analytics &rarr;</a>
+      </div>
+      <p class="muted" style="margin:0 0 12px;">Click a skill to filter members via MongoDB array matching:</p>
+      <% if (topSkills.length === 0) { %>
+        <span class="muted">No skills added yet.</span>
+      <% } else { %>
+        <div style="display:flex; gap:7px; flex-wrap:wrap;">
+          <% topSkills.forEach((s) => { %>
+            <a class="skill-chip" href="/members?skill=<%= encodeURIComponent(s._id) %>">
+              <span><%= s._id %></span>
+              <strong style="color:var(--brand);"><%= s.count %></strong>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<details class="mongo-hint">
+  <summary>
+    <span>MongoDB Operations Powering This Dashboard</span>
+    <span class="muted">Click to inspect</span>
+  </summary>
+  <pre class="mongo-code">// 1. Parallel collection totals + date range filter ($gte)
+db.collection('events').countDocuments({ date: { $gte: startOfToday } });
+
+// 2. Upcoming events with $lookup join + embedded RSVP array size ($size)
+db.collection('events').aggregate([
+  { $match: { date: { $gte: startOfToday } } },
+  { $lookup: { from: 'communities', localField: 'communityId', foreignField: '_id', as: 'community' } },
+  { $unwind: { path: '$community', preserveNullAndEmptyArrays: true } },
+  { $addFields: { rsvpCount: { $size: { $ifNull: ['$rsvps', []] } } } },
+  { $sort: { date: 1 } }, { $limit: 4 }
+]);
+
+// 3. Top skills across all members via $unwind + $group
+db.collection('members').aggregate([
+  { $unwind: '$skills' },
+  { $group: { _id: '$skills', count: { $sum: 1 } } },
+  { $sort: { count: -1 } }, { $limit: 8 }
+]);</pre>
+</details>
 
 <%- include('partials/footer') %>

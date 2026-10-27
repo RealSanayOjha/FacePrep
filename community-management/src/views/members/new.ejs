@@ -1,7 +1,17 @@
 <%- include('../partials/header') %>
 
-<h1>Add member</h1>
-<p class="subtitle">Every member belongs to a community.</p>
+<div class="breadcrumb">
+  <a href="/members">Members</a>
+  <span>/</span>
+  <span>Add Member</span>
+</div>
+
+<div class="page-header">
+  <div>
+    <h1>Add a Member</h1>
+    <p class="subtitle">Register a member inside a community with role, bio, and skill tags.</p>
+  </div>
+</div>
 
 <% const v = (typeof values !== 'undefined' && values) ? values : {}; %>
 
@@ -10,41 +20,66 @@
 <% } %>
 
 <% if (allCommunities.length === 0) { %>
-  <div class="empty">Create a community first. <a href="/communities/new">New community</a></div>
+  <div class="empty">
+    <p>Create a community first before adding members.</p>
+    <a class="btn small" href="/communities/new">+ New Community</a>
+  </div>
 <% } else { %>
-  <div class="card">
+  <div class="card form-card">
     <form method="POST" action="/members">
-      <div class="field">
-        <label for="name">Name *</label>
-        <input type="text" id="name" name="name" value="<%= v.name || '' %>" required />
+      <div class="field-row">
+        <div class="field">
+          <label for="name">Full Name *</label>
+          <input type="text" id="name" name="name" value="<%= v.name || '' %>" placeholder="e.g. Sanay Ojha" required />
+        </div>
+
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" value="<%= v.email || '' %>" placeholder="name@example.com" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="communityId">Community *</label>
+          <select id="communityId" name="communityId" required>
+            <option value="">-- Choose a community --</option>
+            <% allCommunities.forEach((c) => { %>
+              <option value="<%= c._id %>" <%= String(preselected) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="role">Role</label>
+          <select id="role" name="role">
+            <% roles.forEach((r) => { %>
+              <option value="<%= r %>" <%= v.role === r || (!Object.keys(v).length && r === 'member') ? 'selected' : '' %>><%= r %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="skills">Skills (comma-separated)</label>
+          <input type="text" id="skills" name="skills" value="<%= v.skills || '' %>" placeholder="MongoDB, Node.js, React" />
+          <div class="field-hint">Stored as a MongoDB array (<code>skills: [...]</code>) with a multikey index.</div>
+        </div>
+
+        <div class="field">
+          <label for="points">Starting Points</label>
+          <input type="number" id="points" name="points" min="0" value="<%= v.points !== undefined ? v.points : '10' %>" />
+        </div>
       </div>
 
       <div class="field">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" value="<%= v.email || '' %>" placeholder="name@example.com" />
-      </div>
-
-      <div class="field">
-        <label for="role">Role</label>
-        <select id="role" name="role">
-          <% roles.forEach((r) => { %>
-            <option value="<%= r %>" <%= v.role === r || (!Object.keys(v).length && r === 'member') ? 'selected' : '' %>><%= r %></option>
-          <% }) %>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="communityId">Community *</label>
-        <select id="communityId" name="communityId" required>
-          <option value="">-- choose a community --</option>
-          <% allCommunities.forEach((c) => { %>
-            <option value="<%= c._id %>" <%= String(preselected) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
-          <% }) %>
-        </select>
+        <label for="bio">Short Bio</label>
+        <textarea id="bio" name="bio" style="min-height:72px;" placeholder="What are they learning or contributing to?"><%= v.bio || '' %></textarea>
       </div>
 
       <div class="form-actions">
-        <button class="btn" type="submit">Add member</button>
+        <button class="btn" type="submit">Add Member</button>
         <a class="btn secondary" href="/members">Cancel</a>
       </div>
     </form>

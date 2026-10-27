@@ -1,0 +1,148 @@
+<%- include('partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1>Global Search</h1>
+    <p class="subtitle">
+      <% if (q) { %>
+        Found <strong><%= totalMatches %></strong> matching document<%= totalMatches === 1 ? '' : 's' %> for &ldquo;<%= q %>&rdquo; across 4 collections.
+      <% } else { %>
+        Search across communities, events, members, and announcements simultaneously using MongoDB <code>$or</code> + <code>$regex</code>.
+      <% } %>
+    </p>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" action="/search" class="filter-grid">
+    <div class="field search-field">
+      <label for="q">Search query</label>
+      <input type="text" id="q" name="q" value="<%= q %>" placeholder="Try MongoDB, Jaipur, Figma, Workshop, Sanay..." autofocus />
+    </div>
+    <button class="btn" type="submit">Search All Collections</button>
+    <% if (q) { %>
+      <a class="btn secondary" href="/search">Clear</a>
+    <% } %>
+  </form>
+</div>
+
+<% if (q && totalMatches === 0) { %>
+  <div class="empty">
+    <p>No documents matched <strong>&ldquo;<%= q %>&rdquo;</strong>.</p>
+    <a class="btn secondary small" href="/">Back to Dashboard</a>
+  </div>
+<% } else if (q) { %>
+  <% if (results.communities.length > 0) { %>
+    <div class="section-head" style="margin-top:10px;">
+      <h2>Communities (<%= results.communities.length %>)</h2>
+    </div>
+    <div class="cards-grid" style="margin-bottom:26px;">
+      <% results.communities.forEach((c) => { %>
+        <div class="community-card">
+          <div>
+            <div class="community-card-top">
+              <span class="tag category"><%= c.category %></span>
+              <% if (c.location) { %><span class="tag"><%= c.location %></span><% } %>
+            </div>
+            <h3><a href="/communities/<%= c._id %>"><%= c.name %></a></h3>
+            <p class="clamp-2"><%= c.description || 'No description' %></p>
+          </div>
+          <div class="community-card-footer">
+            <span><%= c.views || 0 %> views</span>
+            <a href="/communities/<%= c._id %>">Open hub &rarr;</a>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (results.events.length > 0) { %>
+    <div class="section-head">
+      <h2>Events (<%= results.events.length %>)</h2>
+    </div>
+    <div class="event-list" style="margin-bottom:26px;">
+      <% results.events.forEach((e) => { %>
+        <div class="event-item">
+          <div class="date-tile">
+            <span class="month"><%= formatMonthShort(e.date) %></span>
+            <span class="day"><%= formatDayNum(e.date) %></span>
+          </div>
+          <div class="event-body">
+            <h3><a href="/events/<%= e._id %>"><%= e.title %></a></h3>
+            <div class="event-meta">
+              <% if (e.community) { %>
+                <a href="/communities/<%= e.community._id %>"><strong><%= e.community.name %></strong></a>
+              <% } %>
+              <span>&middot; <%= formatDate(e.date) %></span>
+              <% if (e.location) { %><span>&middot; <%= e.location %></span><% } %>
+            </div>
+          </div>
+          <a class="btn small soft" href="/events/<%= e._id %>">View Event</a>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (results.members.length > 0) { %>
+    <div class="section-head">
+      <h2>Members (<%= results.members.length %>)</h2>
+    </div>
+    <div class="table-wrap" style="margin-bottom:26px;">
+      <table>
+        <thead>
+          <tr><th>Member</th><th>Community</th><th>Role</th><th>Skills</th></tr>
+        </thead>
+        <tbody>
+          <% results.members.forEach((m) => { %>
+            <tr>
+              <td>
+                <div class="member-cell">
+                  <span class="avatar"><%= initials(m.name) %></span>
+                  <div>
+                    <strong><%= m.name %></strong>
+                    <% if (m.email) { %><div class="muted"><%= m.email %></div><% } %>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <% if (m.community) { %>
+                  <a href="/communities/<%= m.community._id %>"><%= m.community.name %></a>
+                <% } else { %>-<% } %>
+              </td>
+              <td><span class="tag <%= m.role %>"><%= m.role %></span></td>
+              <td>
+                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                  <% (m.skills || []).forEach((s) => { %>
+                    <a class="skill-chip" href="/members?skill=<%= encodeURIComponent(s) %>"><%= s %></a>
+                  <% }) %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <% if (results.announcements.length > 0) { %>
+    <div class="section-head">
+      <h2>Announcements (<%= results.announcements.length %>)</h2>
+    </div>
+    <div class="feed-list">
+      <% results.announcements.forEach((a) => { %>
+        <div class="announcement-card <%= a.pinned ? 'pinned' : '' %>">
+          <div class="announcement-top">
+            <% if (a.community) { %>
+              <a class="tag category" href="/communities/<%= a.community._id %>"><%= a.community.name %></a>
+            <% } %>
+            <span class="muted"><%= formatDate(a.createdAt) %></span>
+          </div>
+          <h3><%= a.title %></h3>
+          <p><%= a.body %></p>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+<% } %>
+
+<%- include('partials/footer') %>

@@ -1,65 +1,140 @@
 <%- include('../partials/header') %>
 
-<div class="actions">
-  <div><h1 style="margin-bottom:0;">Events</h1></div>
-  <div class="spacer"></div>
-  <a class="btn" href="/events/new">+ Create event</a>
+<div class="page-header">
+  <div>
+    <h1>Events &amp; Workshops</h1>
+    <p class="subtitle">Discover upcoming sessions, check live seat availability, and manage RSVPs.</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn" href="/events/new">+ Create Event</a>
+  </div>
 </div>
 
-<div class="card">
-  <form method="GET" action="/events" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-    <div class="field" style="margin-bottom:0; min-width:260px; flex:1;">
-      <label for="community">Filter by community</label>
+<!-- Timeframe Status Tabs ($gte / $lt date range queries) -->
+<div class="pill-tabs">
+  <% const baseQs = `q=${encodeURIComponent(filters.q)}&community=${encodeURIComponent(filters.community)}&mode=${encodeURIComponent(filters.mode)}`; %>
+  <a class="pill-tab <%= filters.status === 'all' ? 'active' : '' %>" href="/events?status=all&<%= baseQs %>">All Events</a>
+  <a class="pill-tab <%= filters.status === 'upcoming' ? 'active' : '' %>" href="/events?status=upcoming&<%= baseQs %>">Upcoming</a>
+  <a class="pill-tab <%= filters.status === 'open' ? 'active' : '' %>" href="/events?status=open&<%= baseQs %>">Open Spots</a>
+  <a class="pill-tab <%= filters.status === 'past' ? 'active' : '' %>" href="/events?status=past&<%= baseQs %>">Past Events</a>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" action="/events" class="filter-grid">
+    <input type="hidden" name="status" value="<%= filters.status %>" />
+
+    <div class="field search-field">
+      <label for="q">Search events</label>
+      <input type="text" id="q" name="q" value="<%= filters.q %>" placeholder="Title, venue, or #tag..." />
+    </div>
+
+    <div class="field">
+      <label for="community">Community</label>
       <select id="community" name="community">
         <option value="">All communities</option>
         <% allCommunities.forEach((c) => { %>
-          <option value="<%= c._id %>" <%= String(selectedCommunity) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <option value="<%= c._id %>" <%= String(filters.community) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
         <% }) %>
       </select>
     </div>
-    <button class="btn" type="submit">Apply</button>
+
+    <div class="field">
+      <label for="mode">Format</label>
+      <select id="mode" name="mode">
+        <option value="">All formats</option>
+        <% modes.forEach((m) => { %>
+          <option value="<%= m %>" <%= filters.mode === m ? 'selected' : '' %>><%= m %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:8px;">
+      <button class="btn" type="submit">Filter</button>
+      <% if (filters.q || filters.community || filters.mode || filters.status !== 'all') { %>
+        <a class="btn secondary" href="/events">Reset</a>
+      <% } %>
+    </div>
   </form>
 </div>
 
 <% if (events.length === 0) { %>
-  <div class="empty">No events found. <a href="/events/new">Create the first one</a>.</div>
+  <div class="empty">
+    <p>No events found matching your filters.</p>
+    <a class="btn secondary small" href="/events">Show all events</a>
+    <a class="btn small" href="/events/new">+ Create Event</a>
+  </div>
 <% } else { %>
-  <table>
-    <thead>
-      <tr><th>Event</th><th>Community</th><th>Date</th><th>Location</th><th></th></tr>
-    </thead>
-    <tbody>
-      <% events.forEach((event) => { %>
-        <tr>
-          <td>
-            <strong><%= event.title %></strong>
-            <% if (event.description) { %><br /><span class="muted"><%= event.description %></span><% } %>
-          </td>
-          <td>
+  <div class="event-list">
+    <% events.forEach((event) => {
+         const going = event.rsvpCount || 0;
+         const cap = event.capacity || 0;
+         const pct = cap > 0 ? Math.min(100, Math.round((going / cap) * 100)) : 0;
+         const isPast = event.date && new Date(event.date) < today;
+    %>
+      <div class="event-item">
+        <div class="date-tile">
+          <span class="month"><%= formatMonthShort(event.date) %></span>
+          <span class="day"><%= formatDayNum(event.date) %></span>
+        </div>
+
+        <div class="event-body">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:2px;">
+            <h3><a href="/events/<%= event._id %>"><%= event.title %></a></h3>
+            <span class="tag <%= event.mode === 'Online' ? 'online' : event.mode === 'Hybrid' ? 'hybrid' : '' %>"><%= event.mode %></span>
+            <% if (isPast) { %><span class="tag">Past</span><% } %>
+          </div>
+
+          <div class="event-meta">
             <% if (event.community) { %>
-              <a href="/communities/<%= event.community._id %>"><%= event.community.name %></a>
-            <% } else { %>-<% } %>
-          </td>
-          <td class="nowrap">
-            <%= formatDate(event.date) %>
-            <% if (event.date && new Date(event.date) >= today) { %>
-              <br /><span class="muted">upcoming</span>
-            <% } else if (event.date) { %>
-              <br /><span class="muted">past</span>
+              <a href="/communities/<%= event.community._id %>"><strong><%= event.community.name %></strong></a>
             <% } %>
-          </td>
-          <td><%= event.location || '-' %></td>
-          <td class="nowrap">
+            <span>&middot; <%= formatDate(event.date) %> (<%= formatRelativeDate(event.date) %>)</span>
+            <% if (event.location) { %><span>&middot; <%= event.location %></span><% } %>
+          </div>
+
+          <% if (event.description) { %>
+            <p class="muted" style="margin:6px 0 0;"><%= event.description %></p>
+          <% } %>
+        </div>
+
+        <div class="event-aside">
+          <% if (cap > 0) { %>
+            <div class="capacity-wrap">
+              <div class="capacity-label">
+                <span><%= going %> / <%= cap %> spots</span>
+                <span><%= going >= cap ? 'Full' : `${cap - going} left` %></span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill <%= going >= cap ? 'full' : '' %>" style="width:<%= pct %>%;"></div>
+              </div>
+            </div>
+          <% } else { %>
+            <span class="muted"><%= going %> registered</span>
+          <% } %>
+
+          <div style="display:flex; gap:6px;">
+            <a class="btn small soft" href="/events/<%= event._id %>">View &amp; RSVP</a>
             <a class="btn small secondary" href="/events/<%= event._id %>/edit">Edit</a>
-            <form class="inline-form" method="POST" action="/events/<%= event._id %>/delete"
-                  onsubmit="return confirm('Delete <%= event.title %>?');">
-              <button class="btn small danger" type="submit">Delete</button>
-            </form>
-          </td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
 <% } %>
+
+<details class="mongo-hint">
+  <summary>
+    <span>MongoDB Operations on Events Directory</span>
+    <span class="muted">Click to inspect</span>
+  </summary>
+  <pre class="mongo-code">// Date range queries ($gte / $lt) + $lookup community + $size of embedded `rsvps`:
+db.collection('events').aggregate([
+  { $match: { date: { $gte: startOfToday }, mode: 'Hybrid' } },
+  { $lookup: { from: 'communities', localField: 'communityId', foreignField: '_id', as: 'community' } },
+  { $unwind: { path: '$community', preserveNullAndEmptyArrays: true } },
+  { $addFields: { rsvpCount: { $size: { $ifNull: ['$rsvps', []] } } } },
+  { $sort: { date: 1 } }
+]);</pre>
+</details>
 
 <%- include('../partials/footer') %>

@@ -1,36 +1,35 @@
 <%- include('../partials/header') %>
 
-<h1>Edit event</h1>
-<p class="subtitle">Change the details and save.</p>
+<div class="breadcrumb">
+  <a href="/events">Events</a>
+  <span>/</span>
+  <a href="/events/<%= event._id %>"><%= event.title %></a>
+  <span>/</span>
+  <span>Edit</span>
+</div>
+
+<div class="page-header">
+  <div>
+    <h1>Edit Event</h1>
+    <p class="subtitle">Update schedule, format, or seat capacity while keeping existing RSVPs intact.</p>
+  </div>
+</div>
 
 <% if (typeof error !== 'undefined' && error) { %>
   <div class="banner error"><%= error %></div>
 <% } %>
 
-<div class="card">
+<% const tagsValue = Array.isArray(event.tags) ? event.tags.join(', ') : (event.tags || ''); %>
+
+<div class="card form-card">
   <form method="POST" action="/events/<%= event._id %>/update">
     <div class="field">
-      <label for="title">Title *</label>
+      <label for="title">Event Title *</label>
       <input type="text" id="title" name="title" value="<%= event.title %>" required />
     </div>
 
     <div class="field">
-      <label for="description">Description</label>
-      <textarea id="description" name="description"><%= event.description || '' %></textarea>
-    </div>
-
-    <div class="field">
-      <label for="date">Date</label>
-      <input type="date" id="date" name="date" value="<%= toDateInput(event.date) %>" />
-    </div>
-
-    <div class="field">
-      <label for="location">Location</label>
-      <input type="text" id="location" name="location" value="<%= event.location || '' %>" />
-    </div>
-
-    <div class="field">
-      <label for="communityId">Community *</label>
+      <label for="communityId">Host Community *</label>
       <select id="communityId" name="communityId" required>
         <% allCommunities.forEach((c) => { %>
           <option value="<%= c._id %>" <%= String(event.communityId) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
@@ -38,9 +37,47 @@
       </select>
     </div>
 
+    <div class="field-row">
+      <div class="field">
+        <label for="date">Event Date</label>
+        <input type="date" id="date" name="date" value="<%= toDateInput(event.date) %>" />
+      </div>
+
+      <div class="field">
+        <label for="mode">Format</label>
+        <select id="mode" name="mode">
+          <% modes.forEach((m) => { %>
+            <option value="<%= m %>" <%= (event.mode || 'In-Person') === m ? 'selected' : '' %>><%= m %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="location">Venue / Meeting Link</label>
+        <input type="text" id="location" name="location" value="<%= event.location || '' %>" />
+      </div>
+
+      <div class="field">
+        <label for="capacity">Seat Capacity (0 = unlimited)</label>
+        <input type="number" id="capacity" name="capacity" min="0" value="<%= event.capacity || 0 %>" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="tags">Event Tags (comma-separated)</label>
+      <input type="text" id="tags" name="tags" value="<%= tagsValue %>" />
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" name="description"><%= event.description || '' %></textarea>
+    </div>
+
     <div class="form-actions">
-      <button class="btn" type="submit">Save changes</button>
-      <a class="btn secondary" href="/events">Cancel</a>
+      <button class="btn" type="submit">Save Changes</button>
+      <a class="btn secondary" href="/events/<%= event._id %>">Cancel</a>
     </div>
   </form>
 </div>
