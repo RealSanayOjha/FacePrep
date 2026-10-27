@@ -3,27 +3,58 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title><%= typeof title !== 'undefined' && title ? title : 'Community Management' %></title>
+  <title><%= typeof title !== 'undefined' && title ? `${title} · CommunityHub` : 'CommunityHub' %></title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/">Community&nbsp;Manager</a>
-    <nav>
-      <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Dashboard</a>
-      <a href="/communities" class="<%= currentPath.startsWith('/communities') ? 'active' : '' %>">Communities</a>
-      <a href="/members" class="<%= currentPath.startsWith('/members') ? 'active' : '' %>">Members</a>
-      <a href="/events" class="<%= currentPath.startsWith('/events') ? 'active' : '' %>">Events</a>
-    </nav>
+    <div class="topbar-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">CH</span>
+        <span>CommunityHub</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">Dashboard</a>
+        <a href="/communities" class="<%= currentPath.startsWith('/communities') ? 'active' : '' %>">Communities</a>
+        <a href="/events" class="<%= currentPath.startsWith('/events') ? 'active' : '' %>">Events</a>
+        <a href="/members" class="<%= currentPath.startsWith('/members') ? 'active' : '' %>">Members</a>
+        <a href="/announcements" class="<%= currentPath.startsWith('/announcements') ? 'active' : '' %>">Bulletin</a>
+        <a href="/analytics" class="<%= currentPath.startsWith('/analytics') ? 'active' : '' %>">Insights</a>
+      </nav>
+
+      <form class="topbar-search" method="GET" action="/search">
+        <span class="search-icon">&#128269;</span>
+        <input
+          type="text"
+          name="q"
+          value="<%= currentPath === '/search' && query && query.q ? query.q : '' %>"
+          placeholder="Search hubs, events, skills..."
+          aria-label="Global search"
+        />
+      </form>
+    </div>
   </header>
 
   <main class="container">
     <% if (query && query.deleted) { %>
-      <div class="banner">Deleted successfully.</div>
+      <div class="banner">Record deleted successfully.</div>
     <% } %>
     <% if (query && query.updated) { %>
-      <div class="banner">Changes saved.</div>
+      <div class="banner">Changes saved to MongoDB.</div>
     <% } %>
     <% if (query && query.created) { %>
       <div class="banner">Created successfully.</div>
+    <% } %>
+    <% if (query && query.rsvp) { %>
+      <div class="banner">RSVP confirmed! (+2 contribution points awarded to member)</div>
+    <% } %>
+    <% if (query && query.rsvpCancelled) { %>
+      <div class="banner">RSVP cancelled and seat released.</div>
+    <% } %>
+    <% if (query && query.rsvpError === 'full') { %>
+      <div class="banner error">This event has reached full capacity.</div>
+    <% } %>
+    <% if (query && query.reseeded) { %>
+      <div class="banner">Sample dataset restored across all four collections.</div>
     <% } %>

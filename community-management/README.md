@@ -1,134 +1,121 @@
-# Community Management (MongoDB CRUD)
+# CommunityHub — Community & Event Management (MongoDB + Express)
 
-A small, beginner-friendly **Community Management** system built with **Node.js + Express + the official MongoDB driver**.
-It manages three things: **Communities**, **Members** and **Events**, with full **CRUD** (Create, Read, Update, Delete) on each.
+A clean, multi-page **Community & Event Management** web application built with **Node.js, Express, EJS, and the official MongoDB driver** (`mongodb`).
 
-No ODM, no build step, no TypeScript — just `npm install`, paste your MongoDB link in `.env`, and `npm start`.
+It manages **Communities**, **Members**, **Events (with RSVPs & Capacity)**, **Bulletin Announcements**, and **Live MongoDB Analytics & Index Insights** — with no ODM, no build step, and easy-to-explain MongoDB queries throughout.
 
 ---
 
-## 1. Requirements
-
-- **Node.js 18 or newer** → check with `node -v`
-- **A MongoDB database**, either:
-  - MongoDB installed locally → `mongodb://127.0.0.1:27017`
-  - or a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster → `mongodb+srv://...`
-
-## 2. Setup (takes ~1 minute)
+## 1. Quick Setup
 
 ```bash
 cd community-management
 npm install
 ```
 
-Open the **`.env`** file and paste your connection string:
+Create a `.env` file (or copy `.env.example`):
 
 ```env
-# local
+# Local MongoDB
 MONGODB_URI=mongodb://127.0.0.1:27017
 
-# or Atlas
+# Or MongoDB Atlas
 # MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
+
+# Or instant offline demo mode (in-memory MongoDB engine)
+# MONGODB_URI=memory
 
 DB_NAME=community_management
 PORT=3000
 ```
 
-Optionally fill the app with sample data:
+Seed the database with realistic sample communities, members, events, and announcements:
 
 ```bash
-npm run seed     # 3 communities, 6 members, 4 events
+npm run seed
 ```
 
-Start it:
+Start the server:
 
 ```bash
 npm start        # or: npm run dev   (auto-restarts on file changes)
 ```
 
-Then open **http://localhost:3000**
+Open **http://localhost:3000**.
 
-> `.env` is listed in `.gitignore` so your password never ends up on GitHub.
-> `.env.example` is the committed template.
+---
 
-## 3. What the app does
+## 2. Pages & Features
 
-| Page | What you can do |
+| Route | What you can do |
 |---|---|
-| `/` | Dashboard: totals + next 5 events |
-| `/communities` | List communities (with member/event counts), create, edit, delete |
-| `/communities/:id` | One community + its members + its events |
-| `/members` | List members (filter by community), add, edit, delete |
-| `/events` | List events (filter by community), create, edit, delete |
+| `/` | **Dashboard**: KPI totals, upcoming events with live seat progress bars, highlighted hubs, pinned bulletin posts, and clickable top member skills |
+| `/search?q=...` | **Global Search**: searches across all 4 collections simultaneously (`$or` + `$regex`) |
+| `/communities` | **Communities Directory**: dynamic category tabs & city filters (`distinct`), dot-notation cadence filter (`contact.meetFrequency`), sort options, and discovery tags |
+| `/communities/:id` | **Community Hub**: increments view counter (`$inc`), shows embedded organizer contact info, events, member roster, and community bulletin |
+| `/events` | **Events & Workshops**: filter by Upcoming (`$gte`), Past (`$lt`), Open Spots, or Format (`In-Person` / `Online` / `Hybrid`) |
+| `/events/:id` | **Event Detail & Live RSVPs**: capacity progress meter, register members (`$push` with duplicate guard + `+2` member points via `$inc`), or cancel RSVPs (`$pull`) |
+| `/members` | **Member Directory**: search, filter by community/role/skill, inline add/remove skills (`$addToSet` / `$pull`), award `+5 Kudos` (`$inc`), and server-side pagination (`skip` + `limit` + `countDocuments`) |
+| `/announcements` | **Community Bulletin**: cross-community feed, pinned filter, publish updates, atomic Like counter (`$inc`), and Pin toggle (`$set`) |
+| `/analytics` | **Insights & MongoDB Explorer**: aggregation pipeline charts (`$group`, `$unwind`, `$avg`, `$max`, multi-`$lookup` leaderboard), active index inspector (`indexes()`), and schema design guide |
 
-Deleting a community also deletes its members and events.
+---
 
-## 4. Folder structure
+## 3. MongoDB Concepts Demonstrated (Easy to Explain)
 
-```
-community-management/
-├── .env                  <- your MongoDB connection string (not committed)
-├── .env.example          <- template
-├── package.json
-├── scripts/
-│   └── seed.js           <- sample data (npm run seed)
-├── public/
-│   └── styles.css
-└── src/
-    ├── server.js         <- Express app, routes, error handling
-    ├── config/
-    │   └── db.js         <- connects to MongoDB once, exports getDB()
-    ├── routes/
-    │   ├── communities.js
-    │   ├── members.js
-    │   └── events.js
-    ├── utils/
-    │   └── format.js     <- date helpers used by the views
-    └── views/            <- EJS pages (forms + tables)
-```
-
-## 5. Where each MongoDB operation lives
-
-| Operation | MongoDB call | File |
+| MongoDB Concept | Operators / Methods Used | Where It Lives |
 |---|---|---|
-| **C**reate | `insertOne()` | `src/routes/communities.js` → `POST /` (same pattern in `members.js`, `events.js`) |
-| **R**ead all | `find().sort().toArray()` / `aggregate([...])` | `GET /` in each route file |
-| **R**ead one | `findOne({ _id })` | `GET /:id` in `communities.js` |
-| **U**pdate | `updateOne({ _id }, { $set: {...} })` | `POST /:id/update` |
-| **D**elete | `deleteOne()` / `deleteMany()` | `POST /:id/delete` |
-| Join | `$lookup` (communities ↔ members/events) | `members.js`, `events.js`, `communities.js` |
+| **Full CRUD** | `insertOne`, `insertMany`, `find`, `findOne`, `updateOne`, `deleteOne`, `deleteMany` | All 4 route modules + `scripts/seed.js` |
+| **Embedded Subdocuments** | Nested `community.contact` + dot-notation query `'contact.meetFrequency'`; embedded `event.rsvps` | `src/routes/communities.js`, `src/routes/events.js` |
+| **Document References & Joins** | `communityId: ObjectId(...)` joined via `$lookup` + `$unwind` | `communities.js`, `members.js`, `events.js`, `announcements.js` |
+| **Atomic Counters** | `$inc: { views: 1 }`, `$inc: { points: 5 }`, `$inc: { likes: 1 }` | Community views, Member kudos, Bulletin likes |
+| **Array Operators** | `$addToSet` (unique skills), `$push` (event RSVPs), `$pull` (remove skill / cancel RSVP), `$size` | `src/routes/members.js`, `src/routes/events.js` |
+| **Rich Querying** | `$or`, `$regex` (case-insensitive), `$gte` / `$lt` (date & points ranges), array element match `{ skills: 'MongoDB' }` | Search & filter bars across all pages |
+| **Pagination & Distinct Values** | `distinct('category')`, `distinct('skills')`, `countDocuments()`, `$skip`, `$limit`, `$sort` | `communities.js`, `members.js` |
+| **Aggregation Pipelines** | `$unwind`, `$group` (`$sum`, `$avg`, `$max`), `$project`, `$addFields`, multi-`$lookup` computed score | `src/routes/analytics.js`, `src/server.js` |
+| **Indexing** | Single-field, compound (`{ communityId: 1, pinned: -1, createdAt: -1 }`), and multikey array (`{ skills: 1 }`) via `createIndex()` & `indexes()` | `src/config/db.js`, `src/routes/analytics.js` |
 
-The seed script uses `insertMany()`, `deleteMany()` and `countDocuments()`.
+---
 
-## 6. Document shapes (collections)
+## 4. Document Shapes (4 Collections)
 
 ```js
-// communities
-{ _id, name, description, category, location, createdAt, updatedAt }
+// 1. communities
+{
+  _id, name, description, category, location,
+  tags: ["web-dev", "mongodb"],
+  contact: { leadEmail, website, meetFrequency: "Weekly" | "Bi-weekly" | "Monthly" | "Ad-hoc" },
+  views: 148,
+  featured: true,
+  createdAt, updatedAt
+}
 
-// members  (communityId links to a community)
-{ _id, name, email, role: "member" | "moderator" | "admin", communityId, joinedAt, createdAt, updatedAt }
+// 2. members  (communityId -> communities._id)
+{
+  _id, name, email,
+  role: "member" | "moderator" | "admin",
+  bio,
+  skills: ["MongoDB", "Node.js", "JavaScript"],
+  points: 95,
+  communityId, joinedAt, createdAt, updatedAt
+}
 
-// events   (communityId links to a community)
-{ _id, title, description, date, location, communityId, createdAt, updatedAt }
+// 3. events   (communityId -> communities._id)
+{
+  _id, title, description, date, location,
+  mode: "In-Person" | "Online" | "Hybrid",
+  capacity: 30,
+  tags: ["workshop", "mongodb"],
+  rsvps: [{ memberId, memberName, memberRole, rsvpAt }],
+  communityId, createdAt, updatedAt
+}
+
+// 4. announcements  (communityId -> communities._id)
+{
+  _id, title, body, authorName,
+  communityId,
+  pinned: true,
+  likes: 14,
+  createdAt, updatedAt
+}
 ```
-
-MongoDB creates the database and the collections automatically the first time you insert something — you never have to run `createCollection`.
-
-## 7. Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| `MONGODB_URI is not set` | Put your connection string in `.env` (no quotes needed) and restart |
-| `ECONNREFUSED 127.0.0.1:27017` | Local MongoDB is not running — start `mongod` (or `net start MongoDB` on Windows) |
-| Atlas: `Could not connect` / timeout | In Atlas → **Network Access** → add your IP (or `0.0.0.0/0` while learning). Also check the username/password in the URI |
-| `bad auth` | The password in the URI is URL-encoded or wrong; recreate the DB user |
-| Port already in use | Change `PORT=3001` in `.env` |
-
-## 8. npm scripts
-
-| Command | Description |
-|---|---|
-| `npm start` | Run the app |
-| `npm run dev` | Run with auto-reload on save (Node ≥ 18 `--watch`) |
-| `npm run seed` | Replace all data with the sample set |

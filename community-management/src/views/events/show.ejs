@@ -1,0 +1,190 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/events">Events</a>
+  <span>/</span>
+  <span><%= event.title %></span>
+</div>
+
+<%
+  const going = event.rsvps.length;
+  const cap = event.capacity || 0;
+  const pct = cap > 0 ? Math.min(100, Math.round((going / cap) * 100)) : 0;
+  const isFull = cap > 0 && going >= cap;
+  const isPast = event.date && new Date(event.date) < today;
+%>
+
+<div class="card">
+  <div class="page-header" style="margin-bottom:8px;">
+    <div style="display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap;">
+      <div class="date-tile" style="width:66px; height:70px;">
+        <span class="month"><%= formatMonthShort(event.date) %></span>
+        <span class="day" style="font-size:24px;"><%= formatDayNum(event.date) %></span>
+      </div>
+
+      <div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
+          <span class="tag <%= event.mode === 'Online' ? 'online' : event.mode === 'Hybrid' ? 'hybrid' : 'category' %>"><%= event.mode %></span>
+          <% if (community) { %>
+            <a class="tag category" href="/communities/<%= community._id %>"><%= community.name %></a>
+          <% } %>
+          <% if (isPast) { %><span class="tag">Past Event</span><% } %>
+          <% if (isFull) { %><span class="tag admin">Full Capacity</span><% } %>
+        </div>
+        <h1 style="margin:0 0 6px;"><%= event.title %></h1>
+        <div class="event-meta">
+          <span>&#128197; <%= formatDate(event.date) %> (<%= formatRelativeDate(event.date) %>)</span>
+          <% if (event.location) { %><span>&middot; &#128205; <%= event.location %></span><% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <a class="btn small secondary" href="/events/<%= event._id %>/edit">Edit Event</a>
+      <form class="inline-form" method="POST" action="/events/<%= event._id %>/delete"
+            onsubmit="return confirm('Delete <%= event.title %>?');">
+        <button class="btn small danger" type="submit">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  <% if (event.description) { %>
+    <p style="margin:14px 0 0; color:var(--text-secondary); max-width:740px;"><%= event.description %></p>
+  <% } %>
+
+  <% if (event.tags && event.tags.length > 0) { %>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;">
+      <% event.tags.forEach((t) => { %>
+        <a class="tag hash" href="/events?q=<%= encodeURIComponent(t) %>">#<%= t %></a>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<div class="split-layout">
+  <!-- Main Column: Registered Attendees Roster -->
+  <div>
+    <div class="section-head">
+      <h2>Registered Attendees (<%= going %><%= cap > 0 ? ` / ${cap}` : '' %>)</h2>
+    </div>
+
+    <% if (going === 0) { %>
+      <div class="empty">
+        <p>No members have registered for this event yet. Use the RSVP panel to add the first attendee.</p>
+      </div>
+    <% } else { %>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Registered On</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% event.rsvps.forEach((r) => { %>
+              <tr>
+                <td>
+                  <div class="member-cell">
+                    <span class="avatar"><%= initials(r.memberName) %></span>
+                    <strong><%= r.memberName %></strong>
+                  </div>
+                </td>
+                <td><span class="tag <%= r.memberRole || 'member' %>"><%= r.memberRole || 'member' %></span></td>
+                <td class="nowrap muted"><%= formatDate(r.rsvpAt) %></td>
+                <td class="nowrap" style="text-align:right;">
+                  <form class="inline-form" method="POST" action="/events/<%= event._id %>/rsvp/cancel">
+                    <input type="hidden" name="memberId" value="<%= r.memberId %>" />
+                    <button class="btn small danger" type="submit">Cancel RSVP</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Sidebar Column: Live RSVP Registration + Host Community -->
+  <div>
+    <div class="card compact">
+      <div class="section-head" style="margin-bottom:10px;">
+        <h2 style="font-size:16px;">RSVP a Member</h2>
+      </div>
+
+      <% if (cap > 0) { %>
+        <div style="margin-bottom:14px;">
+          <div class="capacity-label">
+            <span><strong><%= going %></strong> of <strong><%= cap %></strong> seats filled</span>
+            <span><%= isFull ? 'Sold out' : `${cap - going} remaining` %></span>
+          </div>
+          <div class="progress-track" style="height:8px;">
+            <div class="progress-fill <%= isFull ? 'full' : '' %>" style="width:<%= pct %>%;"></div>
+          </div>
+        </div>
+      <% } %>
+
+      <% if (isFull) { %>
+        <p class="muted" style="margin:0;">All seats are currently taken. Cancel an existing RSVP or increase capacity in Edit Event to open more spots.</p>
+      <% } else if (eligibleMembers.length === 0) { %>
+        <p class="muted" style="margin:0 0 10px;">Every existing member is already registered (or no members exist yet).</p>
+        <a class="btn small secondary" href="/members/new<%= community ? `?community=${community._id}` : '' %>">+ Add a New Member</a>
+      <% } else { %>
+        <form method="POST" action="/events/<%= event._id %>/rsvp">
+          <div class="field" style="margin-bottom:12px;">
+            <label for="memberId">Select Member</label>
+            <select id="memberId" name="memberId" required>
+              <option value="">-- Choose member to register --</option>
+              <% eligibleMembers.forEach((m) => { %>
+                <option value="<%= m._id %>">
+                  <%= m.name %><%= m.community ? ` (${m.community.name})` : '' %>
+                </option>
+              <% }) %>
+            </select>
+            <div class="field-hint">Appends attendee subdocument via <code>$push</code> &amp; awards +2 pts via <code>$inc</code>.</div>
+          </div>
+          <button class="btn" type="submit" style="width:100%;">Confirm RSVP</button>
+        </form>
+      <% } %>
+    </div>
+
+    <% if (community) { %>
+      <div class="card compact">
+        <div class="section-head" style="margin-bottom:8px;">
+          <h2 style="font-size:15.5px;">Hosted By</h2>
+        </div>
+        <h3 style="margin:0 0 6px; font-size:16px;">
+          <a href="/communities/<%= community._id %>"><%= community.name %></a>
+        </h3>
+        <p class="muted" style="margin:0 0 12px;"><%= community.description || '' %></p>
+        <a class="btn small secondary" href="/communities/<%= community._id %>">Visit Community Hub &rarr;</a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<details class="mongo-hint">
+  <summary>
+    <span>MongoDB Operations on Event RSVP Page</span>
+    <span class="muted">Click to inspect</span>
+  </summary>
+  <pre class="mongo-code">// 1. Atomic RSVP registration ($push subdocument + duplicate guard on `rsvps.memberId`):
+await db.collection('events').updateOne(
+  { _id: eventId, 'rsvps.memberId': { $ne: member._id } },
+  {
+    $push: { rsvps: { memberId: member._id, memberName: member.name, memberRole: member.role, rsvpAt: new Date() } },
+    $set: { updatedAt: new Date() }
+  }
+);
+
+// 2. Reward active participation (+2 points via $inc):
+await db.collection('members').updateOne({ _id: member._id }, { $inc: { points: 2 } });
+
+// 3. Cancel RSVP ($pull matching subdocument from array):
+await db.collection('events').updateOne({ _id: eventId }, { $pull: { rsvps: { memberId } } });</pre>
+</details>
+
+<%- include('../partials/footer') %>

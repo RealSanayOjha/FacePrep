@@ -1,56 +1,205 @@
 <%- include('../partials/header') %>
 
-<div class="actions">
-  <div><h1 style="margin-bottom:0;">Members</h1></div>
-  <div class="spacer"></div>
-  <a class="btn" href="/members/new">+ Add member</a>
+<div class="page-header">
+  <div>
+    <h1>Member Directory</h1>
+    <p class="subtitle">Browse members across communities, manage array skill tags, and award contribution kudos.</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn" href="/members/new">+ Add Member</a>
+  </div>
 </div>
 
-<div class="card">
-  <form method="GET" action="/members" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-    <div class="field" style="margin-bottom:0; min-width:260px; flex:1;">
-      <label for="community">Filter by community</label>
+<!-- Filter & Search Bar -->
+<div class="filter-bar">
+  <form method="GET" action="/members" class="filter-grid">
+    <div class="field search-field">
+      <label for="q">Search</label>
+      <input type="text" id="q" name="q" value="<%= filters.q %>" placeholder="Name, email, bio, or skill..." />
+    </div>
+
+    <div class="field">
+      <label for="community">Community</label>
       <select id="community" name="community">
         <option value="">All communities</option>
         <% allCommunities.forEach((c) => { %>
-          <option value="<%= c._id %>" <%= String(selectedCommunity) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <option value="<%= c._id %>" <%= String(filters.community) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
         <% }) %>
       </select>
     </div>
-    <button class="btn" type="submit">Apply</button>
+
+    <div class="field">
+      <label for="role">Role</label>
+      <select id="role" name="role">
+        <option value="">All roles</option>
+        <% roles.forEach((r) => { %>
+          <option value="<%= r %>" <%= filters.role === r ? 'selected' : '' %>><%= r %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="skill">Skill Tag</label>
+      <select id="skill" name="skill">
+        <option value="">Any skill</option>
+        <% distinctSkills.forEach((s) => { %>
+          <option value="<%= s %>" <%= filters.skill === s ? 'selected' : '' %>><%= s %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="sort">Sort</label>
+      <select id="sort" name="sort">
+        <option value="name" <%= filters.sort === 'name' ? 'selected' : '' %>>Name (A–Z)</option>
+        <option value="points" <%= filters.sort === 'points' ? 'selected' : '' %>>Highest Points</option>
+        <option value="recent" <%= filters.sort === 'recent' ? 'selected' : '' %>>Recently Joined</option>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:8px;">
+      <button class="btn" type="submit">Apply</button>
+      <% if (filters.q || filters.community || filters.role || filters.skill || filters.minPoints || filters.sort !== 'name') { %>
+        <a class="btn secondary" href="/members">Reset</a>
+      <% } %>
+    </div>
   </form>
 </div>
 
 <% if (members.length === 0) { %>
-  <div class="empty">No members found. <a href="/members/new">Add the first one</a>.</div>
+  <div class="empty">
+    <p>No members matched your filter criteria.</p>
+    <a class="btn secondary small" href="/members">Clear filters</a>
+    <a class="btn small" href="/members/new">+ Add Member</a>
+  </div>
 <% } else { %>
-  <table>
-    <thead>
-      <tr><th>Name</th><th>Email</th><th>Role</th><th>Community</th><th>Joined</th><th></th></tr>
-    </thead>
-    <tbody>
-      <% members.forEach((member) => { %>
+  <div class="table-wrap">
+    <table>
+      <thead>
         <tr>
-          <td><strong><%= member.name %></strong></td>
-          <td><%= member.email || '-' %></td>
-          <td><span class="tag <%= member.role %>"><%= member.role %></span></td>
-          <td>
-            <% if (member.community) { %>
-              <a href="/communities/<%= member.community._id %>"><%= member.community.name %></a>
-            <% } else { %>-<% } %>
-          </td>
-          <td class="nowrap"><%= formatDate(member.joinedAt) %></td>
-          <td class="nowrap">
-            <a class="btn small secondary" href="/members/<%= member._id %>/edit">Edit</a>
-            <form class="inline-form" method="POST" action="/members/<%= member._id %>/delete"
-                  onsubmit="return confirm('Delete <%= member.name %>?');">
-              <button class="btn small danger" type="submit">Delete</button>
-            </form>
-          </td>
+          <th>Member</th>
+          <th>Community &amp; Role</th>
+          <th>Skills (Array: <code>$addToSet</code> / <code>$pull</code>)</th>
+          <th>Points (<code>$inc</code>)</th>
+          <th></th>
         </tr>
-      <% }) %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% members.forEach((member) => { %>
+          <tr>
+            <td>
+              <div class="member-cell">
+                <span class="avatar"><%= initials(member.name) %></span>
+                <div>
+                  <strong><%= member.name %></strong>
+                  <% if (member.email) { %>
+                    <div class="muted" style="font-size:12.5px;"><%= member.email %></div>
+                  <% } %>
+                  <% if (member.bio) { %>
+                    <div class="muted" style="font-size:12px; max-width:250px;"><%= member.bio %></div>
+                  <% } %>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-start;">
+                <% if (member.community) { %>
+                  <a href="/communities/<%= member.community._id %>"><strong><%= member.community.name %></strong></a>
+                <% } else { %>
+                  <span class="muted">-</span>
+                <% } %>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="tag <%= member.role %>"><%= member.role %></span>
+                  <span class="muted" style="font-size:12px;"><%= formatDate(member.joinedAt) %></span>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                <% (member.skills || []).forEach((s) => { %>
+                  <span class="skill-chip">
+                    <a href="/members?skill=<%= encodeURIComponent(s) %>"><%= s %></a>
+                    <form class="inline-form" method="POST" action="/members/<%= member._id %>/skills/remove" title="Remove via $pull">
+                      <input type="hidden" name="skill" value="<%= s %>" />
+                      <input type="hidden" name="returnTo" value="<%= currentUrl %>" />
+                      <button class="skill-remove" type="submit" aria-label="Remove <%= s %>">&times;</button>
+                    </form>
+                  </span>
+                <% }) %>
+
+                <form class="quick-skill-form" method="POST" action="/members/<%= member._id %>/skills/add">
+                  <input type="hidden" name="returnTo" value="<%= currentUrl %>" />
+                  <input type="text" name="skill" placeholder="+ add skill" aria-label="Add skill" />
+                </form>
+              </div>
+            </td>
+
+            <td class="nowrap">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <strong><%= member.points || 0 %> pts</strong>
+                <form class="inline-form" method="POST" action="/members/<%= member._id %>/kudos">
+                  <input type="hidden" name="returnTo" value="<%= currentUrl %>" />
+                  <button class="btn small soft" type="submit" title="Increment points by 5 via MongoDB $inc">+5 Kudos</button>
+                </form>
+              </div>
+            </td>
+
+            <td class="nowrap" style="text-align:right;">
+              <a class="btn small secondary" href="/members/<%= member._id %>/edit">Edit</a>
+              <form class="inline-form" method="POST" action="/members/<%= member._id %>/delete"
+                    onsubmit="return confirm('Delete <%= member.name %>?');">
+                <button class="btn small danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Server-side Pagination Controls (skip + limit + countDocuments) -->
+  <%
+    const pageBaseQs = `q=${encodeURIComponent(filters.q)}&community=${encodeURIComponent(filters.community)}&role=${encodeURIComponent(filters.role)}&skill=${encodeURIComponent(filters.skill)}&sort=${encodeURIComponent(filters.sort)}`;
+  %>
+  <div class="pagination-bar">
+    <span>
+      Showing <strong><%= pagination.from %>–<%= pagination.to %></strong> of <strong><%= pagination.totalCount %></strong> members
+    </span>
+
+    <% if (pagination.totalPages > 1) { %>
+      <div class="page-buttons">
+        <% if (pagination.page > 1) { %>
+          <a class="btn small secondary" href="/members?page=<%= pagination.page - 1 %>&<%= pageBaseQs %>">&larr; Prev</a>
+        <% } %>
+        <% for (let p = 1; p <= pagination.totalPages; p++) { %>
+          <a class="btn small <%= p === pagination.page ? '' : 'secondary' %>"
+             href="/members?page=<%= p %>&<%= pageBaseQs %>"><%= p %></a>
+        <% } %>
+        <% if (pagination.page < pagination.totalPages) { %>
+          <a class="btn small secondary" href="/members?page=<%= pagination.page + 1 %>&<%= pageBaseQs %>">Next &rarr;</a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
 <% } %>
+
+<details class="mongo-hint">
+  <summary>
+    <span>MongoDB Operations on Member Directory</span>
+    <span class="muted">Click to inspect</span>
+  </summary>
+  <pre class="mongo-code">// 1. Add unique skill tag without duplicates ($addToSet) & remove skill tag ($pull):
+await db.collection('members').updateOne({ _id }, { $addToSet: { skills: 'MongoDB' } });
+await db.collection('members').updateOne({ _id }, { $pull: { skills: 'MongoDB' } });
+
+// 2. Award +5 contribution points atomically ($inc):
+await db.collection('members').updateOne({ _id }, { $inc: { points: 5 } });
+
+// 3. Server-side pagination via countDocuments() + $skip + $limit + distinct('skills'):
+const total = await db.collection('members').countDocuments(filter);
+// pipeline ends with: { $sort: sortStage }, { $skip: (page - 1) * 8 }, { $limit: 8 }</pre>
+</details>
 
 <%- include('../partials/footer') %>

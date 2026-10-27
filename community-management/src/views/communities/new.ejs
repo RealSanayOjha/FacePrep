@@ -1,7 +1,17 @@
 <%- include('../partials/header') %>
 
-<h1>New community</h1>
-<p class="subtitle">Fill in the form to create a community.</p>
+<div class="breadcrumb">
+  <a href="/communities">Communities</a>
+  <span>/</span>
+  <span>New Community</span>
+</div>
+
+<div class="page-header">
+  <div>
+    <h1>Create a Community</h1>
+    <p class="subtitle">Set up a hub with category tags and embedded organizer contact info.</p>
+  </div>
+</div>
 
 <% const v = (typeof values !== 'undefined' && values) ? values : {}; %>
 
@@ -9,34 +19,69 @@
   <div class="banner error"><%= error %></div>
 <% } %>
 
-<div class="card">
+<div class="card form-card">
   <form method="POST" action="/communities">
     <div class="field">
-      <label for="name">Name *</label>
+      <label for="name">Community Name *</label>
       <input type="text" id="name" name="name" value="<%= v.name || '' %>" placeholder="e.g. Poornima Coding Club" required />
     </div>
 
     <div class="field">
       <label for="description">Description</label>
-      <textarea id="description" name="description" placeholder="What is this community about?"><%= v.description || '' %></textarea>
+      <textarea id="description" name="description" placeholder="What does this community learn, build, or do together?"><%= v.description || '' %></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <% categories.forEach((c) => { %>
+            <option value="<%= c %>" <%= v.category === c || (!Object.keys(v).length && c === 'Technology') ? 'selected' : '' %>><%= c %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="location">City / Campus</label>
+        <input type="text" id="location" name="location" value="<%= v.location || '' %>" placeholder="e.g. Jaipur" />
+      </div>
     </div>
 
     <div class="field">
-      <label for="category">Category</label>
-      <select id="category" name="category">
-        <% categories.forEach((c) => { %>
-          <option value="<%= c %>" <%= v.category === c || (!Object.keys(v).length && c === 'Other') ? 'selected' : '' %>><%= c %></option>
-        <% }) %>
-      </select>
+      <label for="tags">Discovery Tags (comma-separated)</label>
+      <input type="text" id="tags" name="tags" value="<%= v.tags || '' %>" placeholder="web-dev, mongodb, open-source" />
+      <div class="field-hint">Stored as a MongoDB array field (<code>tags: [...]</code>) for fast tag search.</div>
     </div>
 
-    <div class="field">
-      <label for="location">City / Location</label>
-      <input type="text" id="location" name="location" value="<%= v.location || '' %>" placeholder="e.g. Jaipur" />
+    <div class="fieldset-box">
+      <div class="fieldset-title">Organizer &amp; Schedule (Embedded Subdocument)</div>
+      <div class="field-row">
+        <div class="field" style="margin-bottom:12px;">
+          <label for="leadEmail">Organizer Email</label>
+          <input type="email" id="leadEmail" name="leadEmail" value="<%= v.leadEmail || '' %>" placeholder="lead@example.com" />
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label for="meetFrequency">Meeting Cadence</label>
+          <select id="meetFrequency" name="meetFrequency">
+            <% frequencies.forEach((f) => { %>
+              <option value="<%= f %>" <%= v.meetFrequency === f || (!v.meetFrequency && f === 'Weekly') ? 'selected' : '' %>><%= f %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="website">Website / Repo Link</label>
+        <input type="url" id="website" name="website" value="<%= v.website || '' %>" placeholder="https://github.com/..." />
+      </div>
     </div>
+
+    <label class="checkbox-label">
+      <input type="checkbox" name="featured" <%= v.featured ? 'checked' : '' %> />
+      <span>Feature this community on the Dashboard</span>
+    </label>
 
     <div class="form-actions">
-      <button class="btn" type="submit">Create community</button>
+      <button class="btn" type="submit">Create Community</button>
       <a class="btn secondary" href="/communities">Cancel</a>
     </div>
   </form>

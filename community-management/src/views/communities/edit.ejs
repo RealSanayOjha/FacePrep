@@ -1,16 +1,31 @@
 <%- include('../partials/header') %>
 
-<h1>Edit community</h1>
-<p class="subtitle">Update the details and save.</p>
+<div class="breadcrumb">
+  <a href="/communities">Communities</a>
+  <span>/</span>
+  <a href="/communities/<%= community._id %>"><%= community.name %></a>
+  <span>/</span>
+  <span>Edit</span>
+</div>
+
+<div class="page-header">
+  <div>
+    <h1>Edit <%= community.name %></h1>
+    <p class="subtitle">Update community details, array tags, and embedded contact subdocument.</p>
+  </div>
+</div>
 
 <% if (typeof error !== 'undefined' && error) { %>
   <div class="banner error"><%= error %></div>
 <% } %>
 
-<div class="card">
+<% const contact = community.contact || {}; %>
+<% const tagsValue = Array.isArray(community.tags) ? community.tags.join(', ') : (community.tags || ''); %>
+
+<div class="card form-card">
   <form method="POST" action="/communities/<%= community._id %>/update">
     <div class="field">
-      <label for="name">Name *</label>
+      <label for="name">Community Name *</label>
       <input type="text" id="name" name="name" value="<%= community.name %>" required />
     </div>
 
@@ -19,27 +34,62 @@
       <textarea id="description" name="description"><%= community.description || '' %></textarea>
     </div>
 
-    <div class="field">
-      <label for="category">Category</label>
-      <select id="category" name="category">
-        <% categories.forEach((c) => { %>
-          <option value="<%= c %>" <%= community.category === c ? 'selected' : '' %>><%= c %></option>
-        <% }) %>
-      </select>
+    <div class="field-row">
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <% categories.forEach((c) => { %>
+            <option value="<%= c %>" <%= community.category === c ? 'selected' : '' %>><%= c %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="location">City / Campus</label>
+        <input type="text" id="location" name="location" value="<%= community.location || '' %>" />
+      </div>
     </div>
 
     <div class="field">
-      <label for="location">City / Location</label>
-      <input type="text" id="location" name="location" value="<%= community.location || '' %>" />
+      <label for="tags">Discovery Tags (comma-separated)</label>
+      <input type="text" id="tags" name="tags" value="<%= tagsValue %>" placeholder="web-dev, mongodb, open-source" />
     </div>
+
+    <div class="fieldset-box">
+      <div class="fieldset-title">Organizer &amp; Schedule (Embedded Subdocument)</div>
+      <div class="field-row">
+        <div class="field" style="margin-bottom:12px;">
+          <label for="leadEmail">Organizer Email</label>
+          <input type="email" id="leadEmail" name="leadEmail" value="<%= community.leadEmail !== undefined ? community.leadEmail : (contact.leadEmail || '') %>" />
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label for="meetFrequency">Meeting Cadence</label>
+          <% const currentFreq = community.meetFrequency || contact.meetFrequency || 'Monthly'; %>
+          <select id="meetFrequency" name="meetFrequency">
+            <% frequencies.forEach((f) => { %>
+              <option value="<%= f %>" <%= currentFreq === f ? 'selected' : '' %>><%= f %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="website">Website / Repo Link</label>
+        <input type="url" id="website" name="website" value="<%= community.website !== undefined ? community.website : (contact.website || '') %>" />
+      </div>
+    </div>
+
+    <label class="checkbox-label">
+      <input type="checkbox" name="featured" <%= community.featured ? 'checked' : '' %> />
+      <span>Feature this community on the Dashboard</span>
+    </label>
 
     <div class="form-actions">
-      <button class="btn" type="submit">Save changes</button>
+      <button class="btn" type="submit">Save Changes</button>
       <a class="btn secondary" href="/communities/<%= community._id %>">Cancel</a>
     </div>
   </form>
 </div>
 
-<p class="muted">Created <%= formatDate(community.createdAt) %><% if (community.updatedAt) { %> &middot; last updated <%= formatDate(community.updatedAt) %><% } %></p>
+<p class="muted">Created <%= formatDate(community.createdAt) %><% if (community.updatedAt) { %> &middot; Last updated <%= formatDate(community.updatedAt) %><% } %></p>
 
 <%- include('../partials/footer') %>

@@ -1,8 +1,14 @@
 <%- include('partials/header') %>
 
-<h1>Something went wrong</h1>
-<p class="subtitle"><%= error && error.message ? error.message : 'Unexpected error' %></p>
-<p>Most of the time this means the app could not reach MongoDB. Check the connection string in your <code>.env</code> file.</p>
-<a class="btn" href="/">Back to dashboard</a>
+<div class="card" style="max-width:640px; margin:32px auto;">
+  <h1 style="margin:0 0 8px;">Something went wrong</h1>
+  <div class="banner error" style="margin-top:12px;">
+    <%= error && error.message ? error.message : 'Unexpected server error' %>
+  </div>
+  <p class="muted">
+    Most of the time this means the server could not reach MongoDB. Verify your <code>MONGODB_URI</code> in <code>community-management/.env</code> (or set <code>MONGODB_URI=memory</code> for offline demo mode).
+  </p>
+  <a class="btn" href="/">Back to Dashboard</a>
+</div>
 
 <%- include('partials/footer') %>

@@ -1,7 +1,9 @@
 <%- include('partials/header') %>
 
-<h1>404 - Not found</h1>
-<p class="subtitle">That page or record does not exist.</p>
-<a class="btn" href="/">Back to dashboard</a>
+<div class="empty" style="max-width:540px; margin:40px auto;">
+  <h1 style="margin:0 0 8px; color:var(--text);">404 &mdash; Page Not Found</h1>
+  <p>That page or MongoDB document does not exist (or may have been deleted).</p>
+  <a class="btn" href="/">Back to Dashboard</a>
+</div>
 
 <%- include('partials/footer') %>

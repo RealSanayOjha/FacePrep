@@ -1,5 +1,20 @@
   </main>
 
-  <footer class="note">Community Management &middot; Node.js + Express + MongoDB</footer>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <strong>CommunityHub</strong> &middot; Node.js, Express &amp; Official MongoDB Driver
+      </div>
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <a href="/analytics">MongoDB Insights &amp; Indexes</a>
+        <% if (typeof dbInfo !== 'undefined' && dbInfo) { %>
+          <span class="db-pill">
+            <span class="status-dot"></span>
+            DB: <%= dbInfo.dbName %><%= dbInfo.mode === 'memory' ? ' (demo)' : '' %>
+          </span>
+        <% } %>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

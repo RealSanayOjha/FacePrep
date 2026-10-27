@@ -1,0 +1,334 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1>Insights &amp; MongoDB Explorer</h1>
+    <p class="subtitle">Live platform metrics computed with MongoDB Aggregation Pipelines, plus active collection indexes.</p>
+  </div>
+  <div class="header-actions">
+    <form class="inline-form" method="POST" action="/analytics/reseed"
+          onsubmit="return confirm('Reset all four collections back to the fresh sample dataset?');">
+      <button class="btn secondary small" type="submit">&#8635; Reset Sample Data</button>
+    </form>
+  </div>
+</div>
+
+<!-- Collection Document Counts -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-top"><span>communities</span><code>countDocuments()</code></div>
+    <div class="stat-value"><%= counts.communities %></div>
+    <div class="stat-meta">Hubs + embedded contact info</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-top"><span>members</span><code>countDocuments()</code></div>
+    <div class="stat-value"><%= counts.members %></div>
+    <div class="stat-meta">Profiles + skills multikey array</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-top"><span>events</span><code>countDocuments()</code></div>
+    <div class="stat-value"><%= counts.events %></div>
+    <div class="stat-meta">Sessions + embedded RSVP array</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-top"><span>announcements</span><code>countDocuments()</code></div>
+    <div class="stat-value"><%= counts.announcements %></div>
+    <div class="stat-meta">Pinned posts + atomic likes</div>
+  </div>
+</div>
+
+<!-- Row 1: Category Breakdown ($group) + Top Skills ($unwind -> $group) -->
+<div class="two-col" style="margin-bottom:20px;">
+  <div class="card" style="margin-bottom:0;">
+    <div class="section-head">
+      <h2>Communities by Category</h2>
+      <span class="tag">$group + $sum</span>
+    </div>
+    <% const maxCatCount = categoryStats.reduce((m, c) => Math.max(m, c.count), 1); %>
+    <% if (categoryStats.length === 0) { %>
+      <p class="muted">No communities yet.</p>
+    <% } else { %>
+      <div class="bar-list">
+        <% categoryStats.forEach((cat) => {
+             const pct = Math.round((cat.count / maxCatCount) * 100);
+        %>
+          <div class="bar-row">
+            <div class="bar-row-head">
+              <a href="/communities?category=<%= encodeURIComponent(cat._id || 'Other') %>"><strong><%= cat._id || 'Other' %></strong></a>
+              <span class="muted"><%= cat.count %> hub<%= cat.count === 1 ? '' : 's' %> &middot; <%= cat.totalViews %> views</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:<%= pct %>%;"></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <details class="mongo-hint">
+      <summary><span>Show Aggregation Pipeline</span><span class="muted">$group</span></summary>
+      <pre class="mongo-code">db.collection('communities').aggregate([
+  { $group: {
+      _id: '$category',
+      count: { $sum: 1 },
+      totalViews: { $sum: { $ifNull: ['$views', 0] } }
+  }},
+  { $sort: { count: -1, totalViews: -1 } }
+])</pre>
+    </details>
+  </div>
+
+  <div class="card" style="margin-bottom:0;">
+    <div class="section-head">
+      <h2>Top Skills Across Members</h2>
+      <span class="tag">$unwind + $group</span>
+    </div>
+    <% const maxSkillCount = topSkills.reduce((m, s) => Math.max(m, s.count), 1); %>
+    <% if (topSkills.length === 0) { %>
+      <p class="muted">No skills recorded on members yet.</p>
+    <% } else { %>
+      <div class="bar-list">
+        <% topSkills.forEach((s) => {
+             const pct = Math.round((s.count / maxSkillCount) * 100);
+        %>
+          <div class="bar-row">
+            <div class="bar-row-head">
+              <a href="/members?skill=<%= encodeURIComponent(s._id) %>"><strong><%= s._id %></strong></a>
+              <span class="muted"><%= s.count %> member<%= s.count === 1 ? '' : 's' %></span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:<%= pct %>%;"></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <details class="mongo-hint">
+      <summary><span>Show Aggregation Pipeline</span><span class="muted">$unwind</span></summary>
+      <pre class="mongo-code">db.collection('members').aggregate([
+  { $unwind: '$skills' },
+  { $group: { _id: '$skills', count: { $sum: 1 } } },
+  { $sort: { count: -1, _id: 1 } },
+  { $limit: 10 }
+])</pre>
+    </details>
+  </div>
+</div>
+
+<!-- Row 2: Role Engagement ($avg, $max, $sum) + Event Mode & Capacity Utilization -->
+<div class="two-col" style="margin-bottom:20px;">
+  <div class="card" style="margin-bottom:0;">
+    <div class="section-head">
+      <h2>Engagement Points by Role</h2>
+      <span class="tag">$avg &middot; $max &middot; $sum</span>
+    </div>
+
+    <% if (roleStats.length === 0) { %>
+      <p class="muted">No member statistics yet.</p>
+    <% } else { %>
+      <div class="table-wrap" style="box-shadow:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Members</th>
+              <th>Avg Points</th>
+              <th>Highest</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% roleStats.forEach((r) => { %>
+              <tr>
+                <td><span class="tag <%= r._id %>"><%= r._id %></span></td>
+                <td><%= r.count %></td>
+                <td><strong><%= Math.round(r.avgPoints || 0) %> pts</strong></td>
+                <td><%= r.maxPoints || 0 %> pts</td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <details class="mongo-hint">
+      <summary><span>Show Aggregation Pipeline</span><span class="muted">$avg / $max</span></summary>
+      <pre class="mongo-code">db.collection('members').aggregate([
+  { $group: {
+      _id: '$role',
+      count: { $sum: 1 },
+      avgPoints: { $avg: '$points' },
+      maxPoints: { $max: '$points' }
+  }},
+  { $sort: { avgPoints: -1 } }
+])</pre>
+    </details>
+  </div>
+
+  <div class="card" style="margin-bottom:0;">
+    <div class="section-head">
+      <h2>Event Formats &amp; RSVP Fill</h2>
+      <span class="tag">$size + $group</span>
+    </div>
+
+    <% if (eventModeStats.length === 0) { %>
+      <p class="muted">No events scheduled yet.</p>
+    <% } else { %>
+      <div class="table-wrap" style="box-shadow:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Format</th>
+              <th>Events</th>
+              <th>Total RSVPs</th>
+              <th>Total Capacity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% eventModeStats.forEach((m) => { %>
+              <tr>
+                <td><span class="tag <%= m._id === 'Online' ? 'online' : m._id === 'Hybrid' ? 'hybrid' : '' %>"><%= m._id %></span></td>
+                <td><%= m.events %></td>
+                <td><strong><%= m.totalRsvps %></strong></td>
+                <td><%= m.totalCapacity || '-' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <details class="mongo-hint">
+      <summary><span>Show Aggregation Pipeline</span><span class="muted">$project + $group</span></summary>
+      <pre class="mongo-code">db.collection('events').aggregate([
+  { $project: {
+      mode: { $ifNull: ['$mode', 'In-Person'] },
+      capacity: { $ifNull: ['$capacity', 0] },
+      rsvpCount: { $size: { $ifNull: ['$rsvps', []] } }
+  }},
+  { $group: {
+      _id: '$mode',
+      events: { $sum: 1 },
+      totalCapacity: { $sum: '$capacity' },
+      totalRsvps: { $sum: '$rsvpCount' }
+  }}
+])</pre>
+    </details>
+  </div>
+</div>
+
+<!-- Row 3: Multi-$lookup Community Activity Leaderboard -->
+<div class="card">
+  <div class="section-head">
+    <h2>Community Activity Leaderboard</h2>
+    <span class="tag">Multi-$lookup + Computed Score</span>
+  </div>
+  <p class="muted" style="margin:0 0 14px;">
+    Joins <code>members</code>, <code>events</code>, and <code>announcements</code> onto each community and computes a weighted activity score in MongoDB:
+    <code>(members &times; 5) + (events &times; 10) + (announcements &times; 4) + views</code>.
+  </p>
+
+  <% if (leaderboard.length === 0) { %>
+    <p class="muted">No communities available.</p>
+  <% } else { %>
+    <div class="table-wrap" style="box-shadow:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Community</th>
+            <th>Category</th>
+            <th>Members</th>
+            <th>Events</th>
+            <th>Bulletin Posts</th>
+            <th>Views</th>
+            <th>Activity Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% leaderboard.forEach((c, idx) => { %>
+            <tr>
+              <td><strong><%= idx + 1 %></strong></td>
+              <td><a href="/communities/<%= c._id %>"><strong><%= c.name %></strong></a></td>
+              <td><span class="tag category"><%= c.category %></span></td>
+              <td><%= c.memberCount %></td>
+              <td><%= c.eventCount %></td>
+              <td><%= c.announcementCount %></td>
+              <td><%= c.views %></td>
+              <td><strong style="color:var(--brand);"><%= c.activityScore %></strong></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<!-- Row 4: Active MongoDB Indexes & Schema Design Architecture -->
+<div class="two-col">
+  <div class="card" style="margin-bottom:0;">
+    <div class="section-head">
+      <h2>Active MongoDB Indexes</h2>
+      <span class="tag">collection.indexes()</span>
+    </div>
+    <p class="muted" style="margin:0 0 14px;">
+      Created automatically on server startup via <code>createIndex()</code> to speed up <code>$lookup</code> joins, multikey skill searches, and sorted feeds.
+    </p>
+
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <% indexesByCollection.forEach((entry) => { %>
+        <div style="border:1px solid var(--border); border-radius:10px; padding:12px 14px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <strong><%= entry.collection %></strong>
+            <span class="muted"><%= entry.count %> docs &middot; <%= entry.indexes.length %> indexes</span>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <% entry.indexes.forEach((idx) => { %>
+              <span class="index-badge" title="Index name: <%= idx.name %>">
+                <%= JSON.stringify(idx.key) %>
+              </span>
+            <% }) %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0;">
+    <div class="section-head">
+      <h2>Schema Design: Embedding vs. Referencing</h2>
+    </div>
+    <p class="muted" style="margin:0 0 12px;">
+      This project demonstrates both core MongoDB document modeling patterns side by side:
+    </p>
+
+    <div class="fieldset-box" style="margin-bottom:12px;">
+      <div class="fieldset-title">1. Embedded Data (Stored Inside Parent Document)</div>
+      <ul style="margin:0; padding-left:18px; font-size:13.5px; color:var(--text-secondary);">
+        <li style="margin-bottom:6px;">
+          <strong><code>community.contact</code></strong> &mdash; 1-to-1 organizer email, website, and meeting cadence read on every community load; queried with dot-notation (<code>'contact.meetFrequency'</code>).
+        </li>
+        <li style="margin-bottom:6px;">
+          <strong><code>member.skills</code></strong> &mdash; Bounded string array updated atomically with <code>$addToSet</code> &amp; <code>$pull</code> and indexed via a multikey index.
+        </li>
+        <li>
+          <strong><code>event.rsvps</code></strong> &mdash; Bounded attendee subdocuments updated in a single atomic operation via <code>$push</code> &amp; <code>$pull</code>.
+        </li>
+      </ul>
+    </div>
+
+    <div class="fieldset-box" style="margin-bottom:0;">
+      <div class="fieldset-title">2. Referenced Collections (Linked via <code>ObjectId</code>)</div>
+      <ul style="margin:0; padding-left:18px; font-size:13.5px; color:var(--text-secondary);">
+        <li style="margin-bottom:6px;">
+          <strong><code>members</code>, <code>events</code>, <code>announcements</code></strong> each store <code>communityId: ObjectId(...)</code>.
+        </li>
+        <li>
+          Allows independent pagination, global cross-community directories, unbounded growth, and clean joins via <code>$lookup</code>.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

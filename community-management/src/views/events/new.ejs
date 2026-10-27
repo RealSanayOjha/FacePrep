@@ -1,7 +1,17 @@
 <%- include('../partials/header') %>
 
-<h1>Create event</h1>
-<p class="subtitle">Every event belongs to a community.</p>
+<div class="breadcrumb">
+  <a href="/events">Events</a>
+  <span>/</span>
+  <span>Create Event</span>
+</div>
+
+<div class="page-header">
+  <div>
+    <h1>Schedule an Event</h1>
+    <p class="subtitle">Create an in-person, online, or hybrid session with optional seat capacity.</p>
+  </div>
+</div>
 
 <% const v = (typeof values !== 'undefined' && values) ? values : {}; %>
 
@@ -10,42 +20,68 @@
 <% } %>
 
 <% if (allCommunities.length === 0) { %>
-  <div class="empty">Create a community first. <a href="/communities/new">New community</a></div>
+  <div class="empty">
+    <p>Create a community first before scheduling an event.</p>
+    <a class="btn small" href="/communities/new">+ New Community</a>
+  </div>
 <% } else { %>
-  <div class="card">
+  <div class="card form-card">
     <form method="POST" action="/events">
       <div class="field">
-        <label for="title">Title *</label>
-        <input type="text" id="title" name="title" value="<%= v.title || '' %>" placeholder="e.g. MongoDB Basics Workshop" required />
+        <label for="title">Event Title *</label>
+        <input type="text" id="title" name="title" value="<%= v.title || '' %>" placeholder="e.g. MongoDB Aggregation Workshop" required />
       </div>
 
       <div class="field">
-        <label for="description">Description</label>
-        <textarea id="description" name="description"><%= v.description || '' %></textarea>
-      </div>
-
-      <div class="field">
-        <label for="date">Date</label>
-        <input type="date" id="date" name="date" value="<%= v.date || '' %>" />
-      </div>
-
-      <div class="field">
-        <label for="location">Location</label>
-        <input type="text" id="location" name="location" value="<%= v.location || '' %>" placeholder="e.g. Lab 3, Poornima College" />
-      </div>
-
-      <div class="field">
-        <label for="communityId">Community *</label>
+        <label for="communityId">Host Community *</label>
         <select id="communityId" name="communityId" required>
-          <option value="">-- choose a community --</option>
+          <option value="">-- Choose host community --</option>
           <% allCommunities.forEach((c) => { %>
             <option value="<%= c._id %>" <%= String(preselected) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
           <% }) %>
         </select>
       </div>
 
+      <div class="field-row">
+        <div class="field">
+          <label for="date">Event Date</label>
+          <input type="date" id="date" name="date" value="<%= v.date || '' %>" />
+        </div>
+
+        <div class="field">
+          <label for="mode">Format</label>
+          <select id="mode" name="mode">
+            <% modes.forEach((m) => { %>
+              <option value="<%= m %>" <%= v.mode === m ? 'selected' : '' %>><%= m %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="location">Venue / Meeting Link</label>
+          <input type="text" id="location" name="location" value="<%= v.location || '' %>" placeholder="e.g. Lab 3, Poornima College" />
+        </div>
+
+        <div class="field">
+          <label for="capacity">Seat Capacity (0 = unlimited)</label>
+          <input type="number" id="capacity" name="capacity" min="0" value="<%= v.capacity !== undefined ? v.capacity : '30' %>" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="tags">Event Tags (comma-separated)</label>
+        <input type="text" id="tags" name="tags" value="<%= v.tags || '' %>" placeholder="workshop, mongodb, hands-on" />
+      </div>
+
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" placeholder="Agenda, prerequisites, or what attendees should bring..."><%= v.description || '' %></textarea>
+      </div>
+
       <div class="form-actions">
-        <button class="btn" type="submit">Create event</button>
+        <button class="btn" type="submit">Create Event</button>
         <a class="btn secondary" href="/events">Cancel</a>
       </div>
     </form>

@@ -1,69 +1,266 @@
 <%- include('../partials/header') %>
 
-<div class="actions">
-  <div>
-    <h1 style="margin-bottom:0;"><%= community.name %></h1>
-    <p class="subtitle" style="margin:4px 0 0;">
-      <span class="tag"><%= community.category %></span>
-      <% if (community.location) { %><span class="tag"><%= community.location %></span><% } %>
-    </p>
-  </div>
-  <div class="spacer"></div>
-  <a class="btn secondary" href="/communities/<%= community._id %>/edit">Edit</a>
-  <form class="inline-form" method="POST" action="/communities/<%= community._id %>/delete"
-        onsubmit="return confirm('Delete this community? Its members and events will be deleted too.');">
-    <button class="btn danger" type="submit">Delete</button>
-  </form>
+<div class="breadcrumb">
+  <a href="/communities">Communities</a>
+  <span>/</span>
+  <span><%= community.name %></span>
 </div>
 
+<!-- Community Hero Card -->
 <div class="card">
-  <p><%= community.description || 'No description yet.' %></p>
-  <p class="muted">Created <%= formatDate(community.createdAt) %></p>
+  <div class="page-header" style="margin-bottom:12px;">
+    <div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+        <span class="tag category"><%= community.category %></span>
+        <% if (community.location) { %><span class="tag"><%= community.location %></span><% } %>
+        <% if (community.featured) { %><span class="tag featured">&#9733; Featured Hub</span><% } %>
+        <span class="tag" title="Incremented atomically via MongoDB $inc">&#128065; <%= community.views || 0 %> views</span>
+      </div>
+      <h1 style="margin:0 0 6px;"><%= community.name %></h1>
+      <p style="margin:0; color:var(--text-secondary); max-width:680px;">
+        <%= community.description || 'No description added yet.' %>
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <form class="inline-form" method="POST" action="/communities/<%= community._id %>/feature">
+        <button class="btn small secondary" type="submit">
+          <%= community.featured ? 'Unfeature' : '&#9733; Feature' %>
+        </button>
+      </form>
+      <a class="btn small secondary" href="/communities/<%= community._id %>/edit">Edit</a>
+      <form class="inline-form" method="POST" action="/communities/<%= community._id %>/delete"
+            onsubmit="return confirm('Delete <%= community.name %>? All of its members, events, and announcements will also be deleted.');">
+        <button class="btn small danger" type="submit">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  <% if (community.tags && community.tags.length > 0) { %>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;">
+      <% community.tags.forEach((t) => { %>
+        <a class="tag hash" href="/communities?q=<%= encodeURIComponent(t) %>">#<%= t %></a>
+      <% }) %>
+    </div>
+  <% } %>
 </div>
 
-<h2>Members (<%= communityMembers.length %>)</h2>
-<% if (communityMembers.length === 0) { %>
-  <div class="empty">No members yet. <a href="/members/new?community=<%= community._id %>">Add one</a>.</div>
-<% } else { %>
-  <table>
-    <thead>
-      <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr>
-    </thead>
-    <tbody>
-      <% communityMembers.forEach((member) => { %>
-        <tr>
-          <td><strong><%= member.name %></strong></td>
-          <td><%= member.email || '-' %></td>
-          <td><span class="tag <%= member.role %>"><%= member.role %></span></td>
-          <td class="nowrap"><%= formatDate(member.joinedAt) %></td>
-          <td class="nowrap"><a class="btn small secondary" href="/members/<%= member._id %>/edit">Edit</a></td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
-<% } %>
+<div class="split-layout">
+  <!-- Main Column: Events + Bulletin Feed -->
+  <div>
+    <!-- Upcoming & Past Events in this Community -->
+    <div class="section-head">
+      <h2>Events (<%= communityEvents.length %>)</h2>
+      <a class="btn small" href="/events/new?community=<%= community._id %>">+ Schedule Event</a>
+    </div>
 
-<h2>Events (<%= communityEvents.length %>)</h2>
-<% if (communityEvents.length === 0) { %>
-  <div class="empty">No events yet. <a href="/events/new?community=<%= community._id %>">Create one</a>.</div>
-<% } else { %>
-  <table>
-    <thead>
-      <tr><th>Event</th><th>Date</th><th>Location</th><th></th></tr>
-    </thead>
-    <tbody>
-      <% communityEvents.forEach((event) => { %>
-        <tr>
-          <td><strong><%= event.title %></strong><br /><span class="muted"><%= event.description || '' %></span></td>
-          <td class="nowrap"><%= formatDate(event.date) %></td>
-          <td><%= event.location || '-' %></td>
-          <td class="nowrap"><a class="btn small secondary" href="/events/<%= event._id %>/edit">Edit</a></td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
-<% } %>
+    <% if (communityEvents.length === 0) { %>
+      <div class="empty" style="margin-bottom:28px;">
+        <p>No events scheduled for this community yet.</p>
+        <a class="btn small" href="/events/new?community=<%= community._id %>">Create first event</a>
+      </div>
+    <% } else { %>
+      <div class="event-list" style="margin-bottom:30px;">
+        <% communityEvents.forEach((event) => {
+             const going = Array.isArray(event.rsvps) ? event.rsvps.length : 0;
+             const cap = event.capacity || 0;
+             const pct = cap > 0 ? Math.min(100, Math.round((going / cap) * 100)) : 0;
+        %>
+          <div class="event-item">
+            <div class="date-tile">
+              <span class="month"><%= formatMonthShort(event.date) %></span>
+              <span class="day"><%= formatDayNum(event.date) %></span>
+            </div>
+            <div class="event-body">
+              <h3><a href="/events/<%= event._id %>"><%= event.title %></a></h3>
+              <div class="event-meta">
+                <span><%= formatDate(event.date) %></span>
+                <% if (event.location) { %><span>&middot; <%= event.location %></span><% } %>
+                <span class="tag <%= event.mode === 'Online' ? 'online' : event.mode === 'Hybrid' ? 'hybrid' : '' %>"><%= event.mode || 'In-Person' %></span>
+              </div>
+            </div>
+            <div class="event-aside">
+              <% if (cap > 0) { %>
+                <div class="capacity-wrap">
+                  <div class="capacity-label">
+                    <span><%= going %> / <%= cap %></span>
+                    <span><%= pct %>%</span>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill <%= going >= cap ? 'full' : '' %>" style="width:<%= pct %>%;"></div>
+                  </div>
+                </div>
+              <% } else { %>
+                <span class="muted"><%= going %> going</span>
+              <% } %>
+              <a class="btn small soft" href="/events/<%= event._id %>">Details &amp; RSVP</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
 
-<p style="margin-top:24px;"><a href="/communities">&larr; Back to all communities</a></p>
+    <!-- Community Bulletin / Announcements -->
+    <div class="section-head">
+      <h2>Community Bulletin (<%= communityAnnouncements.length %>)</h2>
+    </div>
+
+    <details class="card compact" style="margin-bottom:16px;">
+      <summary style="cursor:pointer; font-weight:600; color:var(--brand);">
+        + Post an announcement to <%= community.name %>
+      </summary>
+      <form method="POST" action="/announcements" style="margin-top:14px;">
+        <input type="hidden" name="communityId" value="<%= community._id %>" />
+        <input type="hidden" name="returnTo" value="/communities/<%= community._id %>" />
+
+        <div class="field-row">
+          <div class="field">
+            <label for="ann-title">Headline *</label>
+            <input type="text" id="ann-title" name="title" placeholder="e.g. Room change for Saturday session" required />
+          </div>
+          <div class="field">
+            <label for="ann-author">Posted by</label>
+            <input type="text" id="ann-author" name="authorName" placeholder="Your name" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ann-body">Details</label>
+          <textarea id="ann-body" name="body" style="min-height:68px;" placeholder="Share updates, links, or reminders..."></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <label class="checkbox-label" style="margin:0;">
+            <input type="checkbox" name="pinned" />
+            <span>Pin to top of community feed</span>
+          </label>
+          <button class="btn small" type="submit">Publish Update</button>
+        </div>
+      </form>
+    </details>
+
+    <% if (communityAnnouncements.length === 0) { %>
+      <div class="empty">
+        <p>No announcements posted in this community yet.</p>
+      </div>
+    <% } else { %>
+      <div class="feed-list">
+        <% communityAnnouncements.forEach((post) => { %>
+          <div class="announcement-card <%= post.pinned ? 'pinned' : '' %>">
+            <div class="announcement-top">
+              <span class="muted">Posted by <strong><%= post.authorName || 'Admin' %></strong> &middot; <%= formatRelativeDate(post.createdAt) %></span>
+              <% if (post.pinned) { %><span class="tag featured">Pinned</span><% } %>
+            </div>
+            <h3><%= post.title %></h3>
+            <% if (post.body) { %><p><%= post.body %></p><% } %>
+            <div class="announcement-footer">
+              <div style="display:flex; gap:6px;">
+                <form class="inline-form" method="POST" action="/announcements/<%= post._id %>/like">
+                  <input type="hidden" name="returnTo" value="/communities/<%= community._id %>" />
+                  <button class="btn small secondary" type="submit">&#9825; Like (<%= post.likes || 0 %>)</button>
+                </form>
+                <form class="inline-form" method="POST" action="/announcements/<%= post._id %>/pin">
+                  <input type="hidden" name="returnTo" value="/communities/<%= community._id %>" />
+                  <button class="btn small secondary" type="submit"><%= post.pinned ? 'Unpin' : 'Pin' %></button>
+                </form>
+              </div>
+              <form class="inline-form" method="POST" action="/announcements/<%= post._id %>/delete"
+                    onsubmit="return confirm('Delete this announcement?');">
+                <input type="hidden" name="returnTo" value="/communities/<%= community._id %>" />
+                <button class="btn small danger" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Sidebar Column: Embedded Contact Info + Members Roster -->
+  <div>
+    <div class="card compact">
+      <div class="section-head" style="margin-bottom:12px;">
+        <h2 style="font-size:15.5px;">Hub Details</h2>
+      </div>
+      <% const contact = community.contact || {}; %>
+      <div class="info-list">
+        <div class="info-row">
+          <span class="muted">Meeting Cadence</span>
+          <strong><%= contact.meetFrequency || 'Monthly' %></strong>
+        </div>
+        <div class="info-row">
+          <span class="muted">Lead Contact</span>
+          <span><%= contact.leadEmail || 'Not listed' %></span>
+        </div>
+        <% if (contact.website) { %>
+          <div class="info-row">
+            <span class="muted">Website</span>
+            <a href="<%= contact.website %>" target="_blank" rel="noopener noreferrer">Visit link &nearr;</a>
+          </div>
+        <% } %>
+        <div class="info-row">
+          <span class="muted">Founded</span>
+          <span><%= formatDate(community.createdAt) %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card compact">
+      <div class="section-head" style="margin-bottom:12px;">
+        <h2 style="font-size:15.5px;">Members (<%= communityMembers.length %>)</h2>
+        <a class="btn small soft" href="/members/new?community=<%= community._id %>">+ Add</a>
+      </div>
+
+      <% if (communityMembers.length === 0) { %>
+        <p class="muted" style="margin:0;">No members in this community yet.</p>
+      <% } else { %>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <% communityMembers.forEach((member) => { %>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+              <div class="member-cell" style="align-items:flex-start;">
+                <span class="avatar"><%= initials(member.name) %></span>
+                <div>
+                  <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                    <strong style="font-size:14px;"><%= member.name %></strong>
+                    <span class="tag <%= member.role %>"><%= member.role %></span>
+                  </div>
+                  <div class="muted" style="font-size:12px;"><%= member.points || 0 %> pts</div>
+                  <% if (member.skills && member.skills.length) { %>
+                    <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
+                      <% member.skills.slice(0, 3).forEach((s) => { %>
+                        <a class="skill-chip" href="/members?skill=<%= encodeURIComponent(s) %>" style="font-size:11px; padding:1px 7px;"><%= s %></a>
+                      <% }) %>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:4px;">
+                <form class="inline-form" method="POST" action="/members/<%= member._id %>/kudos" title="Award +5 points ($inc)">
+                  <input type="hidden" name="returnTo" value="/communities/<%= community._id %>" />
+                  <button class="btn small secondary" type="submit">+5</button>
+                </form>
+                <a class="btn small secondary" href="/members/<%= member._id %>/edit">Edit</a>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<details class="mongo-hint">
+  <summary>
+    <span>MongoDB Operations on Community Hub Page</span>
+    <span class="muted">Click to inspect</span>
+  </summary>
+  <pre class="mongo-code">// 1. Atomic view counter increment every time this hub is opened ($inc):
+await db.collection('communities').updateOne({ _id }, { $inc: { views: 1 } });
+
+// 2. Embedded subdocument (`community.contact`) stored directly inside the community document
+// 3. Referenced collections (`members`, `events`, `announcements`) queried by `{ communityId: _id }`
+// 4. Cascade delete (`deleteOne` + `deleteMany`) keeps all 4 collections clean on removal.</pre>
+</details>
 
 <%- include('../partials/footer') %>

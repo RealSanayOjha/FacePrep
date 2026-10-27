@@ -1,38 +1,145 @@
 <%- include('../partials/header') %>
 
-<div class="actions">
+<div class="page-header">
   <div>
-    <h1 style="margin-bottom:0;">Communities</h1>
+    <h1>Communities</h1>
+    <p class="subtitle">Explore campus clubs, local guilds, and interest groups across cities.</p>
   </div>
-  <div class="spacer"></div>
-  <a class="btn" href="/communities/new">+ New community</a>
+  <div class="header-actions">
+    <a class="btn" href="/communities/new">+ New Community</a>
+  </div>
+</div>
+
+<!-- Dynamic Category Pills built via MongoDB distinct('category') -->
+<div class="pill-tabs">
+  <a class="pill-tab <%= !filters.category ? 'active' : '' %>"
+     href="/communities?q=<%= encodeURIComponent(filters.q) %>&location=<%= encodeURIComponent(filters.location) %>&frequency=<%= encodeURIComponent(filters.frequency) %>&sort=<%= encodeURIComponent(filters.sort) %>">
+    All Categories
+  </a>
+  <% distinctCategories.forEach((cat) => { %>
+    <a class="pill-tab <%= filters.category === cat ? 'active' : '' %>"
+       href="/communities?category=<%= encodeURIComponent(cat) %>&q=<%= encodeURIComponent(filters.q) %>&location=<%= encodeURIComponent(filters.location) %>&frequency=<%= encodeURIComponent(filters.frequency) %>&sort=<%= encodeURIComponent(filters.sort) %>">
+      <%= cat %>
+    </a>
+  <% }) %>
+</div>
+
+<!-- Search, Location, Schedule (dot-notation), and Sort Filter Bar -->
+<div class="filter-bar">
+  <form method="GET" action="/communities" class="filter-grid">
+    <% if (filters.category) { %>
+      <input type="hidden" name="category" value="<%= filters.category %>" />
+    <% } %>
+
+    <div class="field search-field">
+      <label for="q">Search</label>
+      <input type="text" id="q" name="q" value="<%= filters.q %>" placeholder="Name, description, or #tag..." />
+    </div>
+
+    <div class="field">
+      <label for="location">City</label>
+      <select id="location" name="location">
+        <option value="">All cities</option>
+        <% distinctLocations.forEach((loc) => { %>
+          <option value="<%= loc %>" <%= filters.location === loc ? 'selected' : '' %>><%= loc %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="frequency">Cadence</label>
+      <select id="frequency" name="frequency">
+        <option value="">Any cadence</option>
+        <% frequencies.forEach((f) => { %>
+          <option value="<%= f %>" <%= filters.frequency === f ? 'selected' : '' %>><%= f %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="sort">Sort by</label>
+      <select id="sort" name="sort">
+        <option value="featured" <%= filters.sort === 'featured' ? 'selected' : '' %>>Featured &amp; Popular</option>
+        <option value="members" <%= filters.sort === 'members' ? 'selected' : '' %>>Most Members</option>
+        <option value="views" <%= filters.sort === 'views' ? 'selected' : '' %>>Most Viewed</option>
+        <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+        <option value="name" <%= filters.sort === 'name' ? 'selected' : '' %>>Name (A–Z)</option>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:8px;">
+      <button class="btn" type="submit">Apply</button>
+      <% if (filters.q || filters.category || filters.location || filters.frequency || filters.sort !== 'featured') { %>
+        <a class="btn secondary" href="/communities">Reset</a>
+      <% } %>
+    </div>
+  </form>
 </div>
 
 <% if (communities.length === 0) { %>
-  <div class="empty">No communities yet. <a href="/communities/new">Create the first one</a>.</div>
+  <div class="empty">
+    <p>No communities match your current filters.</p>
+    <a class="btn secondary small" href="/communities">Clear filters</a>
+    <a class="btn small" href="/communities/new">+ New Community</a>
+  </div>
 <% } else { %>
-  <div class="grid">
+  <div class="cards-grid">
     <% communities.forEach((community) => { %>
-      <div class="card">
-        <h3><a href="/communities/<%= community._id %>"><%= community.name %></a></h3>
-        <p class="muted"><%= community.description || 'No description' %></p>
-        <p>
-          <span class="tag"><%= community.category %></span>
-          <% if (community.location) { %><span class="tag"><%= community.location %></span><% } %>
-        </p>
-        <p class="muted"><%= community.memberCount %> members &middot; <%= community.eventCount %> events</p>
-        <div class="form-actions" style="margin-top:14px;">
-          <a class="btn small secondary" href="/communities/<%= community._id %>/edit">Edit</a>
-          <a class="btn small secondary" href="/members/new?community=<%= community._id %>">Add member</a>
-          <a class="btn small secondary" href="/events/new?community=<%= community._id %>">Add event</a>
-          <form class="inline-form" method="POST" action="/communities/<%= community._id %>/delete"
-                onsubmit="return confirm('Delete <%= community.name %>? Its members and events will be deleted too.');">
-            <button class="btn small danger" type="submit">Delete</button>
-          </form>
+      <div class="community-card">
+        <div>
+          <div class="community-card-top">
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <span class="tag category"><%= community.category %></span>
+              <% if (community.location) { %>
+                <span class="tag"><%= community.location %></span>
+              <% } %>
+            </div>
+            <% if (community.featured) { %>
+              <span class="tag featured">&#9733; Featured</span>
+            <% } %>
+          </div>
+
+          <h3><a href="/communities/<%= community._id %>"><%= community.name %></a></h3>
+          <p class="clamp-2"><%= community.description || 'No description provided yet.' %></p>
+
+          <% if (community.tags && community.tags.length > 0) { %>
+            <div class="tag-row">
+              <% community.tags.slice(0, 4).forEach((t) => { %>
+                <a class="tag hash" href="/communities?q=<%= encodeURIComponent(t) %>">#<%= t %></a>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+
+        <div class="community-card-footer">
+          <span>
+            <strong><%= community.memberCount %></strong> members &middot;
+            <strong><%= community.eventCount %></strong> events &middot;
+            <%= community.views || 0 %> views
+          </span>
+          <a href="/communities/<%= community._id %>">Explore &rarr;</a>
         </div>
       </div>
     <% }) %>
   </div>
 <% } %>
+
+<details class="mongo-hint">
+  <summary>
+    <span>MongoDB Operations on Communities Directory</span>
+    <span class="muted">Click to inspect</span>
+  </summary>
+  <pre class="mongo-code">// Dynamic filter menus populated directly from live collection values:
+await db.collection('communities').distinct('category');
+await db.collection('communities').distinct('location');
+
+// Dot-notation filter on embedded subdocument + $or/$regex + $lookup counts:
+db.collection('communities').aggregate([
+  { $match: { 'contact.meetFrequency': 'Weekly', $or: [{ name: /.../i }, { tags: /.../i }] } },
+  { $lookup: { from: 'members', localField: '_id', foreignField: 'communityId', as: 'members' } },
+  { $lookup: { from: 'events', localField: '_id', foreignField: 'communityId', as: 'events' } },
+  { $project: { name: 1, category: 1, views: 1, memberCount: { $size: '$members' }, eventCount: { $size: '$events' } } }
+]);</pre>
+</details>
 
 <%- include('../partials/footer') %>
