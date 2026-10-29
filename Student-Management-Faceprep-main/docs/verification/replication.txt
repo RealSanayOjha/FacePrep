@@ -1,0 +1,76 @@
+PRIMARY=localhost:27021
+PASS: majority write acknowledged
+PASS: marker read from secondary localhost:27022
+NEW_PRIMARY=localhost:27022
+{
+  _id: ObjectId('6ae2bf47afb347e6a45ea743'),
+  marker: 'before-failover',
+  at: ISODate('2026-10-29T03:36:39.770Z')
+}
+PASS: new primary accepts majority writes after old primary stopped
+PASS: old primary rejoined healthy as PRIMARY (higher priority lets it reclaim PRIMARY).
+[
+  {
+    name: 'localhost:27021',
+    state: 'PRIMARY',
+    health: 1
+  },
+  {
+    name: 'localhost:27022',
+    state: 'SECONDARY',
+    health: 1
+  },
+  {
+    name: 'localhost:27023',
+    state: 'SECONDARY',
+    health: 1
+  }
+]
+NOTICE: pause application writes during this selected-database dump for snapshot consistency.
+2026-10-29T03:39:10.948+0000	writing replica_test.replication_marker to archive '/home/user/.cache/replica-backups/.replica_test.GSfLvv/replica_test.archive.gz'
+2026-10-29T03:39:10.951+0000	done dumping replica_test.replication_marker (2 documents)
+Backup complete: /home/user/.cache/replica-backups/replica_test-20261029T033910Z-5276
+Keep a second encrypted copy off this host and test restoration regularly.
+replica_test.archive.gz: OK
+WARNING: restoring replica_test to the server in MONGODB_URI.
+Collections in this archive will be dropped. Stop application writes first.
+2026-10-29T03:39:33.997+0000	preparing collections to restore from
+2026-10-29T03:39:34.092+0000	reading metadata for replica_test.replication_marker from archive '/home/user/.cache/replica-backups/replica_test-20261029T033910Z-5276/replica_test.archive.gz'
+2026-10-29T03:39:34.093+0000	dropping collection replica_test.replication_marker before restoring
+2026-10-29T03:39:34.102+0000	restoring replica_test.replication_marker from archive '/home/user/.cache/replica-backups/replica_test-20261029T033910Z-5276/replica_test.archive.gz'
+2026-10-29T03:39:34.113+0000	finished restoring replica_test.replication_marker (2 documents, 0 failures)
+2026-10-29T03:39:34.113+0000	no indexes to restore for collection replica_test.replication_marker
+2026-10-29T03:39:34.113+0000	2 document(s) restored successfully. 0 document(s) failed to restore.
+{
+  database: 'replica_test',
+  collections: {
+    replication_marker: 2
+  },
+  studentIndexes: []
+}
+Restore completed. Run application smoke tests before resuming traffic.
+PASS: selected-database replica backup restored with 2 marker documents.
+
+--- live full-instance oplog backup/restore on isolated test replica ---
+2026-10-29T03:39:34.910+0000	writing admin.system.version to archive '/home/user/.cache/replica-full.archive.gz'
+2026-10-29T03:39:34.912+0000	done dumping admin.system.version (1 document)
+2026-10-29T03:39:34.912+0000	writing replica_test.replication_marker to archive '/home/user/.cache/replica-full.archive.gz'
+2026-10-29T03:39:34.922+0000	done dumping replica_test.replication_marker (2 documents)
+2026-10-29T03:39:34.922+0000	writing captured oplog to 
+2026-10-29T03:39:34.932+0000		dumped 1 oplog entry
+2026-10-29T03:39:35.017+0000	preparing collections to restore from
+2026-10-29T03:39:35.021+0000	don't know what to do with subdirectory "replica_test", skipping...
+2026-10-29T03:39:35.021+0000	don't know what to do with subdirectory "", skipping...
+2026-10-29T03:39:35.021+0000	don't know what to do with subdirectory "admin", skipping...
+2026-10-29T03:39:35.112+0000	reading metadata for replica_test.replication_marker from archive '/home/user/.cache/replica-full.archive.gz'
+2026-10-29T03:39:35.112+0000	dropping collection replica_test.replication_marker before restoring
+2026-10-29T03:39:35.121+0000	restoring replica_test.replication_marker from archive '/home/user/.cache/replica-full.archive.gz'
+2026-10-29T03:39:35.131+0000	finished restoring replica_test.replication_marker (2 documents, 0 failures)
+2026-10-29T03:39:35.132+0000	replaying oplog
+2026-10-29T03:39:35.135+0000	applied 3 oplog entries
+2026-10-29T03:39:35.135+0000	no indexes to restore for collection replica_test.replication_marker
+2026-10-29T03:39:35.135+0000	2 document(s) restored successfully. 0 document(s) failed to restore.
+PASS: full-instance --oplog backup and --oplogReplay restore verified on test replica.
+
+--- Spring Boot API against replica set ---
+PASS: health, create, read, update, search, statistics and delete.

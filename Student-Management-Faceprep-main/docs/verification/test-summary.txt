@@ -1,0 +1,6 @@
+com.example.students.controller.StudentControllerTest: tests=9 failures=0 errors=0 skipped=0 time=1.283s
+com.example.students.service.StudentServiceTest: tests=13 failures=0 errors=0 skipped=0 time=1.955s
+com.example.students.StudentApiIT: tests=16 failures=0 errors=0 skipped=0 time=4.123s
+
+Docker-free integration command: ./mvnw -B verify -Pintegration -Dit.mongo.uri=mongodb://127.0.0.1:27017/student_management_it
+Database used: local standalone MongoDB test database only (suffix _it).

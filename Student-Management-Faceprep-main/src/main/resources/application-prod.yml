@@ -1,0 +1,7 @@
+# Production profile: apply database/indexes.js as a controlled migration first.
+# Authentication, TLS, network restrictions and application authorization are still
+# required before an Internet-facing deployment; see docs/OPERATIONS.md.
+app:
+  indexes:
+    auto-create: ${MONGO_AUTO_INDEX:false}
+  seed-demo-data: ${SEED_DEMO_DATA:false}

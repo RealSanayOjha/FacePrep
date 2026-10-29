@@ -1,0 +1,39 @@
+NOTICE: pause application writes during a standalone dump for snapshot consistency.
+2026-10-29T03:35:49.971+0000	writing student_management.students to archive '/home/user/student-management/backups/.student_management.czq9m8/student_management.archive.gz'
+2026-10-29T03:35:49.974+0000	done dumping student_management.students (12 documents)
+Backup complete: /home/user/student-management/backups/student_management-20261029T033550Z-4106
+Keep a second encrypted copy off this host and test restoration regularly.
+student_management.archive.gz: OK
+WARNING: restoring student_management to the server in MONGODB_URI.
+Collections in this archive will be dropped. Stop application writes first.
+2026-10-29T03:35:50.530+0000	preparing collections to restore from
+2026-10-29T03:35:50.627+0000	reading metadata for student_management.students from archive '/home/user/student-management/backups/student_management-20261029T033550Z-4106/student_management.archive.gz'
+2026-10-29T03:35:50.635+0000	restoring student_management.students from archive '/home/user/student-management/backups/student_management-20261029T033550Z-4106/student_management.archive.gz'
+2026-10-29T03:35:50.646+0000	finished restoring student_management.students (12 documents, 0 failures)
+2026-10-29T03:35:50.646+0000	restoring indexes for collection student_management.students from metadata
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"name":"idx_status_created", "v":2}, Key:primitive.D{primitive.E{Key:"status", Value:1}, primitive.E{Key:"createdAt", Value:-1}, primitive.E{Key:"_id", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"name":"idx_year_created", "v":2}, Key:primitive.D{primitive.E{Key:"yearLevel", Value:1}, primitive.E{Key:"createdAt", Value:-1}, primitive.E{Key:"_id", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"default_language":"none", "language_override":"language", "name":"txt_students_search", "textIndexVersion":3, "v":2, "weights":primitive.M{"course":2, "email":5, "firstName":6, "lastName":8, "studentCode":10}}, Key:primitive.D{primitive.E{Key:"_fts", Value:"text"}, primitive.E{Key:"_ftsx", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"name":"uq_students_code", "unique":true, "v":2}, Key:primitive.D{primitive.E{Key:"studentCode", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"name":"uq_students_email", "unique":true, "v":2}, Key:primitive.D{primitive.E{Key:"email", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"name":"idx_course_status_year_created", "v":2}, Key:primitive.D{primitive.E{Key:"course", Value:1}, primitive.E{Key:"status", Value:1}, primitive.E{Key:"yearLevel", Value:1}, primitive.E{Key:"createdAt", Value:-1}, primitive.E{Key:"_id", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"name":"idx_created", "v":2}, Key:primitive.D{primitive.E{Key:"createdAt", Value:-1}, primitive.E{Key:"_id", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.646+0000	index: &idx.IndexDocument{Options:primitive.M{"name":"idx_name", "v":2}, Key:primitive.D{primitive.E{Key:"lastName", Value:1}, primitive.E{Key:"firstName", Value:1}, primitive.E{Key:"_id", Value:1}}, PartialFilterExpression:primitive.D(nil)}
+2026-10-29T03:35:50.720+0000	12 document(s) restored successfully. 0 document(s) failed to restore.
+{
+  database: 'student_management',
+  students: 12,
+  indexes: [
+    '_id_',
+    'idx_status_created',
+    'idx_year_created',
+    'txt_students_search',
+    'uq_students_code',
+    'uq_students_email',
+    'idx_course_status_year_created',
+    'idx_created',
+    'idx_name'
+  ]
+}
+Restore completed. Run application smoke tests before resuming traffic.
+PASS: 12 records, 9 indexes, unique constraints and sample data restored.

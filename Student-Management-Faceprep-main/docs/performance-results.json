@@ -1,0 +1,102 @@
+{
+  "generatedAt": "2026-10-29T03:34:59.004Z",
+  "serverVersion": "8.0.34",
+  "documents": 20000,
+  "note": "Warm-cache local benchmark; not a production capacity claim. Benchmark collection dropped after measurement.",
+  "baseline": {
+    "email": {
+      "plan": {
+        "stages": [
+          "COLLSCAN"
+        ],
+        "indexes": [],
+        "keysExamined": 0,
+        "documentsExamined": 20000,
+        "returned": 1,
+        "executionMillis": 6
+      },
+      "timing": {
+        "iterations": 40,
+        "averageMillis": 8.875
+      }
+    },
+    "filtered": {
+      "plan": {
+        "stages": [
+          "SORT",
+          "COLLSCAN"
+        ],
+        "indexes": [],
+        "keysExamined": 0,
+        "documentsExamined": 20000,
+        "returned": 10,
+        "executionMillis": 7
+      },
+      "timing": {
+        "iterations": 40,
+        "averageMillis": 10.425
+      }
+    }
+  },
+  "indexed": {
+    "email": {
+      "plan": {
+        "stages": [
+          "EXPRESS_IXSCAN"
+        ],
+        "indexes": [
+          "uq_students_email"
+        ],
+        "keysExamined": 1,
+        "documentsExamined": 1,
+        "returned": 1,
+        "executionMillis": 0
+      },
+      "timing": {
+        "iterations": 40,
+        "averageMillis": 1.625
+      }
+    },
+    "filtered": {
+      "plan": {
+        "stages": [
+          "LIMIT",
+          "FETCH",
+          "IXSCAN"
+        ],
+        "indexes": [
+          "idx_course_status_year_created"
+        ],
+        "keysExamined": 10,
+        "documentsExamined": 10,
+        "returned": 10,
+        "executionMillis": 3
+      },
+      "timing": {
+        "iterations": 40,
+        "averageMillis": 1.425
+      }
+    },
+    "text": {
+      "plan": {
+        "stages": [
+          "LIMIT",
+          "TEXT_MATCH",
+          "FETCH",
+          "IXSCAN"
+        ],
+        "indexes": [
+          "txt_students_search"
+        ],
+        "keysExamined": 10,
+        "documentsExamined": 10,
+        "returned": 10,
+        "executionMillis": 1
+      },
+      "timing": {
+        "iterations": 40,
+        "averageMillis": 1.55
+      }
+    }
+  }
+}
