@@ -94,12 +94,16 @@
         const details = element("div");
         details.append(element("span", "student-name", fullName), element("span", "student-email", student.email));
         identityWrap.append(avatar, details); identity.append(identityWrap);
-        const code = element("td"); code.append(element("code", "student-code", student.studentCode));
-        const course = element("td"); course.append(element("span", "course-name", student.course), element("span", "course-year", `Year ${student.yearLevel}`));
-        const status = element("td");
+        const code = element("td"); code.dataset.label = "Student ID"; code.append(element("code", "student-code", student.studentCode));
+        const course = element("td"); course.dataset.label = "Course / Year";
+        const courseStack = element("div", "course-stack");
+        courseStack.append(element("span", "course-name", student.course), element("span", "course-year", `Year ${student.yearLevel}`));
+        course.append(courseStack);
+        const status = element("td"); status.dataset.label = "Status";
         const label = student.status.charAt(0) + student.status.slice(1).toLowerCase();
         status.append(element("span", `status-badge ${student.status.toLowerCase()}`, label));
-        const actions = element("td"), buttons = element("div", "row-actions");
+        const actions = element("td", "actions-cell"); actions.dataset.label = "Actions";
+        const buttons = element("div", "row-actions");
         const edit = element("button", "icon-button"), remove = element("button", "icon-button delete-action");
         edit.type = remove.type = "button";
         edit.setAttribute("aria-label", `Edit ${fullName}`); edit.title = "Edit student";
@@ -269,7 +273,7 @@
   $("retryButton").addEventListener("click", refresh);
   $("previousPage").addEventListener("click", () => { if (state.page > 0) { state.page--; loadStudents().catch(() => connection(false)); } });
   $("nextPage").addEventListener("click", () => { if (state.page < state.totalPages - 1) { state.page++; loadStudents().catch(() => connection(false)); } });
-  ["topAddButton"].forEach(id => $(id).addEventListener("click", () => openForm()));
+  ["topAddButton", "sideAddButton"].forEach(id => $(id).addEventListener("click", () => openForm()));
   ["closeDialog", "cancelDialog"].forEach(id => $(id).addEventListener("click", () => { if (!state.saving) $("studentDialog").close(); }));
   $("studentDialog").addEventListener("cancel", event => { if (state.saving) event.preventDefault(); });
   $("studentForm").addEventListener("submit", saveStudent);
@@ -281,6 +285,46 @@
       event.preventDefault(); $("searchInput").focus();
     }
   });
+  // Sidebar navigation: mobile drawer toggling + scroll-spy highlight.
+  const navToggle = $("navToggle");
+  const sidebarClose = $("sidebarClose");
+  const sidebarScrim = $("sidebarScrim");
+  const navLinks = [...document.querySelectorAll(".nav-link[data-nav]")];
+  function setNavOpen(open) {
+    document.body.classList.toggle("nav-open", open);
+    if (navToggle) navToggle.setAttribute("aria-expanded", String(open));
+  }
+  if (navToggle) navToggle.addEventListener("click", () => setNavOpen(!document.body.classList.contains("nav-open")));
+  if (sidebarClose) sidebarClose.addEventListener("click", () => setNavOpen(false));
+  if (sidebarScrim) sidebarScrim.addEventListener("click", () => setNavOpen(false));
+  navLinks.forEach(link => link.addEventListener("click", () => setNavOpen(false)));
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && document.body.classList.contains("nav-open")) setNavOpen(false); });
+  if (window.matchMedia) {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const handleDesktop = event => { if (event.matches) setNavOpen(false); };
+    if (desktop.addEventListener) desktop.addEventListener("change", handleDesktop);
+    else if (desktop.addListener) desktop.addListener(handleDesktop);
+  }
+  const navSections = ["overview", "directory", "courses", "shortcuts"].filter(id => $(id));
+  let navFrame = 0;
+  function syncNavHighlight() {
+    navFrame = 0;
+    if (!navLinks.length) return;
+    const doc = document.documentElement;
+    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4;
+    let current = navSections[0];
+    if (atBottom) current = navSections[navSections.length - 1];
+    else navSections.forEach(id => { if ($(id).getBoundingClientRect().top <= 140) current = id; });
+    navLinks.forEach(link => {
+      const active = link.dataset.nav === current;
+      link.classList.toggle("is-active", active);
+      if (active) link.setAttribute("aria-current", "true");
+      else link.removeAttribute("aria-current");
+    });
+  }
+  window.addEventListener("scroll", () => { if (!navFrame) navFrame = requestAnimationFrame(syncNavHighlight); }, { passive: true });
+  syncNavHighlight();
+
   updateCourseOptions();
   refresh();
 })();
